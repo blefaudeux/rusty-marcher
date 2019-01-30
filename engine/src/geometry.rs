@@ -47,6 +47,6 @@ impl std::clone::Clone for Vec3f {
     }
 }
 
-// pub fn dot(v1: &Vec3f, v2: &Vec3f) -> f64 {
-//     return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) as f64;
-// }
+pub fn dot(v1: &Vec3f, v2: &Vec3f) -> f64 {
+    return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) as f64;
+}
