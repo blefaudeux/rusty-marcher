@@ -7,6 +7,19 @@ pub struct Vec3f {
     pub z: f64,
 }
 
+pub fn normalize(vec: &mut Vec3f) {
+    let norm = dot(vec, vec);
+    if norm > 0. {
+        scale(vec, 1. / norm);
+    }
+}
+
+pub fn scale(vec: &mut Vec3f, scale: f64) {
+    vec.x *= scale;
+    vec.y *= scale;
+    vec.z *= scale;
+}
+
 impl Add for Vec3f {
     type Output = Vec3f;
 
