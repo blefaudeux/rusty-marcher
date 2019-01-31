@@ -1,4 +1,3 @@
-mod frame_to_disk;
 mod framebuffer;
 mod geometry;
 mod renderer;
@@ -28,5 +27,5 @@ fn main() {
     ray_marcher.render(&mut frame, &sphere);
 
     // Save to file
-    frame_to_disk::write_ppm("out.ppm", &frame.buffer, &width, &height).unwrap();
+    frame.write_ppm("out.ppm").unwrap();
 }

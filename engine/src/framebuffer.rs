@@ -1,5 +1,8 @@
 use geometry;
 
+use std::fs::File;
+use std::io::Write;
+
 pub struct FrameBuffer {
     pub width: u32,
     pub height: u32,
@@ -35,5 +38,40 @@ pub fn fill_gradient(frame: &mut FrameBuffer) {
             };
             index += 1;
         }
+    }
+}
+
+fn quantize(f: &f64) -> u8 {
+    return (255. * f.max(0.).min(1.)) as u8;
+}
+
+impl FrameBuffer {
+    pub fn write_ppm(&self, filename: &str) -> std::io::Result<usize> {
+        // Open the file stream and dump
+        let mut file = File::create(filename)?;
+        // return file.write_all(buffer);
+
+        // Standard PPM header
+        file.write(format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
+
+        // Write line by line, probably not needed thanks to buffering, but anyway..
+        let mut line = vec![0 as u8; (self.width * 3) as usize];
+        let mut i_buffer = 0 as usize;
+        let mut i_line = 0 as usize;
+
+        for _i in 0..self.height {
+            for _j in 0..self.width {
+                line[i_line..i_line + 3].clone_from_slice(&[
+                    quantize(&self.buffer[i_buffer].x),
+                    quantize(&self.buffer[i_buffer].y),
+                    quantize(&self.buffer[i_buffer].z),
+                ]);
+                i_line += 3;
+                i_buffer += 1;
+            }
+            i_line = 0;
+            file.write(&line)?;
+        }
+        Ok(0)
     }
 }
