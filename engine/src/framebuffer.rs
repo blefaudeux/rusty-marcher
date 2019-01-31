@@ -24,27 +24,6 @@ pub fn create_frame_buffer(width_: u32, height_: u32) -> FrameBuffer {
     };
 }
 
-pub fn fill_gradient(frame: &mut FrameBuffer) {
-    let fh = frame.height as f64;
-    let fw = frame.width as f64;
-    let mut index = 0 as usize;
-
-    for j in 0..frame.height {
-        for i in 0..frame.width {
-            frame.buffer[index] = geometry::Vec3f {
-                x: (j as f64) / fh,
-                y: (i as f64) / fw,
-                z: 0 as f64,
-            };
-            index += 1;
-        }
-    }
-}
-
-fn quantize(f: &f64) -> u8 {
-    return (255. * f.max(0.).min(1.)) as u8;
-}
-
 impl FrameBuffer {
     pub fn write_ppm(&self, filename: &str) -> std::io::Result<usize> {
         // Open the file stream and dump
@@ -74,4 +53,51 @@ impl FrameBuffer {
         }
         Ok(0)
     }
+
+    // pub fn fill_gradient(&mut self) {
+    //     let fh = self.height as f64;
+    //     let fw = self.width as f64;
+    //     let mut index = 0 as usize;
+
+    //     for j in 0..self.height {
+    //         for i in 0..self.width {
+    //             self.buffer[index] = geometry::Vec3f {
+    //                 x: (j as f64) / fh,
+    //                 y: (i as f64) / fw,
+    //                 z: 0 as f64,
+    //             };
+    //             index += 1;
+    //         }
+    //     }
+    // }
+
+    pub fn normalize(&mut self) {
+        let mut index = 0 as usize;
+        let mut max = geometry::Vec3f::zero();
+
+        for _ in 0..self.height {
+            for _ in 0..self.width {
+                max.x = max.x.max(self.buffer[index].x);
+                max.y = max.y.max(self.buffer[index].y);
+                max.z = max.z.max(self.buffer[index].z);
+
+                index += 1;
+            }
+        }
+
+        let max_val = max.x.max(max.y).max(max.z);
+        index = 0;
+        if max_val > 0. {
+            for _ in 0..self.height {
+                for _ in 0..self.width {
+                    self.buffer[index].scale(1. / max_val);
+                    index += 1;
+                }
+            }
+        }
+    }
+}
+
+fn quantize(f: &f64) -> u8 {
+    return (255. * f.max(0.).min(1.)) as u8;
 }
