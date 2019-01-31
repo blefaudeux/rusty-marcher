@@ -1,6 +1,6 @@
 use framebuffer::FrameBuffer;
-use geometry::normalize;
 use geometry::Vec3f;
+use lights::Light;
 use shapes::Shape;
 
 pub struct Renderer {
@@ -22,14 +22,13 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, frame: &mut FrameBuffer, shape: &Shape) {
+    pub fn render(&self, frame: &mut FrameBuffer, shapes: Vec<&impl Shape>, _lights: Vec<&Light>) {
         let mut index = 0 as usize;
 
         for j in 0..frame.height {
             for i in 0..frame.width {
                 let dir = self.backproject(i, j);
-                frame.buffer[index] = cast_ray_binary(dir, shape);
-
+                frame.buffer[index] = cast_ray(dir, &shapes);
                 index += 1;
             }
         }
@@ -42,32 +41,33 @@ impl Renderer {
             z: -1.,
         };
 
-        normalize(&mut dir);
+        dir.normalize();
 
         return dir;
     }
 }
 
-fn cast_ray_binary(dir: Vec3f, shape: &Shape) -> Vec3f {
+fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>) -> Vec3f {
     let orig = Vec3f {
         x: 0.,
         y: 0.,
         z: 0.,
     };
 
-    let (valid, _distance) = shape.intersect(orig, dir);
-
-    if !valid {
-        return Vec3f {
-            x: 0.2,
-            y: 0.7,
-            z: 0.8,
-        }; // background color
+    for shape in shapes {
+        let (valid, _distance) = shape.intersect(orig, dir);
+        if valid {
+            return Vec3f {
+                x: 0.4,
+                y: 0.4,
+                z: 0.3,
+            };
+        }
     }
 
     return Vec3f {
-        x: 0.4,
-        y: 0.4,
-        z: 0.3,
-    };
+        x: 0.2,
+        y: 0.7,
+        z: 0.8,
+    }; // background color
 }

@@ -1,20 +1,41 @@
 use std::ops::{Add, Sub};
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
 pub struct Vec3f {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
 
-pub fn normalize(vec: &mut Vec3f) {
+impl Vec3f {
+    pub fn normalize(&mut self) {
+        normalize(self);
+    }
+
+    pub fn normalize_l0(&mut self) {
+        normalize_l0(self);
+    }
+
+    pub fn scale(&mut self, s: f64) {
+        scale(self, s);
+    }
+}
+
+fn normalize(vec: &mut Vec3f) {
     let norm = dot(vec, vec);
     if norm > 0. {
         scale(vec, 1. / norm);
     }
 }
 
-pub fn scale(vec: &mut Vec3f, scale: f64) {
+fn normalize_l0(vec: &mut Vec3f) {
+    let norm = vec.x.max(vec.y).max(vec.z);
+    if norm > 0. {
+        scale(vec, 1. / norm);
+    }
+}
+
+fn scale(vec: &mut Vec3f, scale: f64) {
     vec.x *= scale;
     vec.y *= scale;
     vec.z *= scale;
@@ -50,15 +71,15 @@ impl std::fmt::Display for Vec3f {
     }
 }
 
-impl std::clone::Clone for Vec3f {
-    fn clone(&self) -> Vec3f {
-        return Vec3f {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-        };
-    }
-}
+// impl std::clone::Clone for Vec3f {
+//     fn clone(&self) -> Vec3f {
+//         return Vec3f {
+//             x: self.x,
+//             y: self.y,
+//             z: self.z,
+//         };
+//     }
+// }
 
 pub fn dot(v1: &Vec3f, v2: &Vec3f) -> f64 {
     return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) as f64;

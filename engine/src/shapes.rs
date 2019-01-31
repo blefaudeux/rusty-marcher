@@ -1,20 +1,23 @@
 use geometry;
 use geometry::Vec3f;
 
-pub trait Shape {
+pub trait Shape: Copy {
     fn intersect(&self, orig: Vec3f, dir: Vec3f) -> (bool, f64);
 }
 
 // Out most basic shape: a simple sphere, easy to intersect
+#[derive(Copy, Clone)]
 pub struct Sphere {
     pub center: Vec3f,
     pub radius_square: f64,
+    pub diffuse_color: Vec3f,
 }
 
-pub fn create_sphere(c: &Vec3f, radius: f64) -> Sphere {
+pub fn create_sphere(center_: Vec3f, radius: f64, diffuse_color_: Vec3f) -> Sphere {
     return Sphere {
-        center: c.clone(),
+        center: center_,
         radius_square: radius * radius,
+        diffuse_color: diffuse_color_,
     };
 }
 
