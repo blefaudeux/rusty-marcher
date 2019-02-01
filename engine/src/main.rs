@@ -18,10 +18,11 @@ fn main() {
     // Add spheres to the scene
     // Red sphere
     reflectance.diffuse_color = Vec3f {
-        x: 1.,
+        x: 0.8,
         y: 0.,
         z: 0.,
     };
+    reflectance.specular_exponent = 100.;
 
     let sphere_red = sphere::create(
         Vec3f {
@@ -34,11 +35,16 @@ fn main() {
     );
 
     // Blue sphere
+    reflectance.specular_exponent = 40.;
+
     reflectance.diffuse_color = Vec3f {
         x: 0.,
         y: 0.,
         z: 1.,
     };
+
+    reflectance.specular = 0.;
+
     let sphere_blue = sphere::create(
         Vec3f {
             x: -3.,
@@ -50,6 +56,7 @@ fn main() {
     );
 
     // Green sphere
+    reflectance.specular = 1.;
     reflectance.diffuse_color = Vec3f {
         // Green sphere
         x: 0.,
