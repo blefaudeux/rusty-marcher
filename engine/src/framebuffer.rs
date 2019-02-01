@@ -34,13 +34,13 @@ impl FrameBuffer {
         file.write(format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
 
         // Write line by line, probably not needed thanks to buffering, but anyway..
-        let mut line = vec![0 as u8; (self.width * 3) as usize];
+        let mut writte_buffer = vec![0 as u8; (self.width * self.height * 3) as usize];
         let mut i_buffer = 0 as usize;
         let mut i_line = 0 as usize;
 
         for _i in 0..self.height {
             for _j in 0..self.width {
-                line[i_line..i_line + 3].clone_from_slice(&[
+                writte_buffer[i_line..i_line + 3].clone_from_slice(&[
                     quantize(&self.buffer[i_buffer].x),
                     quantize(&self.buffer[i_buffer].y),
                     quantize(&self.buffer[i_buffer].z),
@@ -48,9 +48,8 @@ impl FrameBuffer {
                 i_line += 3;
                 i_buffer += 1;
             }
-            i_line = 0;
-            file.write(&line)?;
         }
+        file.write(&writte_buffer)?;
         Ok(0)
     }
 

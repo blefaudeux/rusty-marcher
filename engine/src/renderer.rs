@@ -46,9 +46,23 @@ impl Renderer {
     }
 }
 
-fn diffusion_factor(intersection: &Intersection, light: &Light) -> f64 {
-    let light_dir = (light.position - intersection.point).normalized();
+fn reflect(incident: &Vec3f, normal: &Vec3f) -> Vec3f {
+    return *incident - normal.scaled(2. * incident.dot(normal));
+}
+
+fn diffusion_factor(intersection: &Intersection, light_dir: &Vec3f) -> f64 {
     return light_dir.dot(&intersection.normal).max(0.);
+}
+
+fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3f) -> f64 {
+    // Compute the light reflected vector at that point
+    let incident = -*light_dir;
+    let reflected = reflect(&incident, &intersection.normal);
+
+    // The specular reflection coeff is the dot product in between the purely
+    // reflected ray and the viewerś point of view
+    let dir_to_viewer = (*origin - intersection.point).normalized();
+    return reflected.dot(&dir_to_viewer).max(0.);
 }
 
 fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3f {
@@ -60,16 +74,27 @@ fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3
         match result {
             Some(intersection) => {
                 // We got an intersection, compute the contribution from all the lights:
-                let mut diffuse_light_intensity = Vec3f::zero();
+                let mut light_intensity = Vec3f::zero();
 
+                // Go through all the lights, sum up the individual contributions
                 for light in lights {
-                    let diffusion = diffusion_factor(&intersection, light);
+                    let light_dir = (light.position - intersection.point).normalized();
 
-                    diffuse_light_intensity += (light.color * shape.diffuse_color())
+                    // Handle diffuse lighting
+                    let diffusion = diffusion_factor(&intersection, &light_dir);
+
+                    light_intensity += (light.color * shape.reflectance().diffuse_color)
                         .scaled(diffusion)
                         .scaled(light.intensity);
+
+                    // Handle specular reflections
+                    let specular = (specular_factor(&intersection, &orig, &light_dir)
+                        * shape.reflectance().specular)
+                        .powf(shape.reflectance().specular_exponent);
+
+                    light_intensity += light.color.scaled(specular);
                 }
-                return diffuse_light_intensity;
+                return light_intensity;
             }
             // No intersection, do nothing and test the next shape
             _ => {}

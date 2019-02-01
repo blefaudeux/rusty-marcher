@@ -3,6 +3,7 @@ mod geometry;
 mod lights;
 mod renderer;
 mod shapes;
+mod sphere;
 
 use geometry::Vec3f;
 
@@ -12,65 +13,74 @@ fn main() {
     let height = 800 as u32;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
-    // Add a sphere to the scene
-    let sphere_red = shapes::create_sphere(
+    let mut reflectance = shapes::create_default_reflectance();
+
+    // Add spheres to the scene
+    // Red sphere
+    reflectance.diffuse_color = Vec3f {
+        x: 1.,
+        y: 0.,
+        z: 0.,
+    };
+
+    let sphere_red = sphere::create(
         Vec3f {
             x: -5.,
             y: 0.,
             z: -16.,
         },
         2.,
-        Vec3f {
-            // Red sphere
-            x: 1.,
-            y: 0.,
-            z: 0.,
-        },
+        reflectance,
     );
 
-    let sphere_blue = shapes::create_sphere(
+    // Blue sphere
+    reflectance.diffuse_color = Vec3f {
+        x: 0.,
+        y: 0.,
+        z: 1.,
+    };
+    let sphere_blue = sphere::create(
         Vec3f {
             x: -3.,
             y: -4.,
             z: -12.,
         },
         2.,
-        Vec3f {
-            // Blue sphere
-            x: 0.,
-            y: 0.,
-            z: 1.,
-        },
+        reflectance,
     );
 
-    let sphere_green = shapes::create_sphere(
+    // Green sphere
+    reflectance.diffuse_color = Vec3f {
+        // Green sphere
+        x: 0.,
+        y: 1.,
+        z: 0.,
+    };
+
+    let sphere_green = sphere::create(
         Vec3f {
             x: 6.,
             y: -0.5,
             z: -18.,
         },
         3.,
-        Vec3f {
-            // Green sphere
-            x: 0.,
-            y: 1.,
-            z: 0.,
-        },
+        reflectance,
     );
 
-    let sphere_white = shapes::create_sphere(
+    // White sphere
+    reflectance.diffuse_color = Vec3f {
+        x: 1.,
+        y: 1.,
+        z: 1.,
+    };
+    let sphere_white = sphere::create(
         Vec3f {
             x: 6.,
             y: 6.,
             z: -14.,
         },
         4.,
-        Vec3f {
-            // White sphere
-            x: 1.,
-            y: 1.,
-            z: 1.,
-        },
+        reflectance,
     );
 
     // Add a light to the scene
