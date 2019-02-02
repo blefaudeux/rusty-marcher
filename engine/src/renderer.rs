@@ -65,6 +65,22 @@ fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3
     return reflected.dot(&dir_to_viewer).max(0.);
 }
 
+fn shape_shadow(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>) -> bool {
+    for shape in shapes {
+        let result = shape.intersect(*orig, *dir);
+
+        match result {
+            Some(_intersection) => {
+                return true;
+            }
+            None => {
+                continue;
+            }
+        }
+    }
+    return false;
+}
+
 fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3f {
     let orig = Vec3f::zero();
 
@@ -79,6 +95,19 @@ fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3
                 // Go through all the lights, sum up the individual contributions
                 for light in lights {
                     let light_dir = (light.position - intersection.point).normalized();
+
+                    // Check that another shape is not in the way, else skip this light
+                    let mut shadow_orig: Vec3f;
+
+                    if light_dir.dot(&intersection.normal) < 0. {
+                        shadow_orig = intersection.point - intersection.normal.scaled(1e-3);
+                    } else {
+                        shadow_orig = intersection.point + intersection.normal.scaled(1e-3);
+                    }
+
+                    if shape_shadow(&shadow_orig, &light_dir, shapes) {
+                        continue;
+                    }
 
                     // Handle diffuse lighting
                     let diffusion = diffusion_factor(&intersection, &light_dir);
