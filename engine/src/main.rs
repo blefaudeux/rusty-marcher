@@ -9,13 +9,13 @@ use geometry::Vec3f;
 
 fn main() {
     // Allocate our dummy buffer
-    let width = 2560 as u32;
-    let height = 1440 as u32;
+    let width = 1280 as u32;
+    let height = 800 as u32;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     let mut reflectance = shapes::create_default_reflectance();
 
-    // Add spheres to the scene
+    // TODO: Move that to a JSON loader
     // Red sphere
     reflectance.diffuse_color = Vec3f {
         x: 0.8,
@@ -35,28 +35,29 @@ fn main() {
     );
 
     // Blue sphere
-    reflectance.reflection = 0.1;
     reflectance.specular_exponent = 40.;
-
+    reflectance.reflection = 0.;
     reflectance.diffuse_color = Vec3f {
-        x: 0.,
-        y: 0.,
+        x: 1.,
+        y: 1.,
         z: 1.,
     };
-
-    reflectance.specular = 0.;
+    reflectance.refractive_index = 1.5;
+    reflectance.specular = 0.8;
+    reflectance.diffusion = 0.;
 
     let sphere_blue = sphere::create(
         Vec3f {
-            x: -3.,
-            y: -4.,
-            z: -12.,
+            x: 0.,
+            y: 1.,
+            z: -5.,
         },
         2.,
         reflectance,
     );
 
     // Green sphere
+    reflectance.diffusion = 0.8;
     reflectance.specular = 1.;
     reflectance.diffuse_color = Vec3f {
         // Green sphere
@@ -77,9 +78,9 @@ fn main() {
 
     // White sphere
     reflectance.diffuse_color = Vec3f {
-        x: 1.,
-        y: 1.,
-        z: 1.,
+        x: 0.9,
+        y: 0.9,
+        z: 0.9,
     };
     let sphere_white = sphere::create(
         Vec3f {
