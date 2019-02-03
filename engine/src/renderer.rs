@@ -25,11 +25,12 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 impl Renderer {
     pub fn render(&self, frame: &mut FrameBuffer, shapes: Vec<&impl Shape>, lights: Vec<&Light>) {
         let mut index = 0 as usize;
+        let orig = Vec3f::zero();
 
         for j in 0..frame.height {
             for i in 0..frame.width {
                 let dir = self.backproject(i, j);
-                frame.buffer[index] = cast_ray(dir, &shapes, &lights);
+                frame.buffer[index] = cast_ray(&orig, &dir, &shapes, &lights, 1);
                 index += 1;
             }
         }
@@ -67,7 +68,7 @@ fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3
 
 fn shape_shadow(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>) -> bool {
     for shape in shapes {
-        let result = shape.intersect(*orig, *dir);
+        let result = shape.intersect(orig, dir);
 
         match result {
             Some(_intersection) => {
@@ -81,16 +82,42 @@ fn shape_shadow(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>) -> bool {
     return false;
 }
 
-fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3f {
-    let orig = Vec3f::zero();
+fn cast_ray(
+    orig: &Vec3f,
+    dir: &Vec3f,
+    shapes: &Vec<&impl Shape>,
+    lights: &Vec<&Light>,
+    n_recursion: u8,
+) -> Vec3f {
+    if n_recursion > 4 {
+        return Vec3f::zero();
+    }
 
     for shape in shapes {
         let result = shape.intersect(orig, dir);
 
         match result {
             Some(intersection) => {
-                // We got an intersection, compute the contribution from all the lights:
+                // We got an intersection
                 let mut light_intensity = Vec3f::zero();
+
+                // Compute the reflections
+                let reflected_ray = reflect(dir, &intersection.normal);
+                let mut reflection_orig: Vec3f;
+                if reflected_ray.dot(&intersection.normal) < 0. {
+                    reflection_orig = intersection.point - intersection.normal.scaled(1e-3);
+                } else {
+                    reflection_orig = intersection.point + intersection.normal.scaled(1e-3);
+                }
+
+                light_intensity += cast_ray(
+                    &reflection_orig,
+                    &reflected_ray,
+                    shapes,
+                    lights,
+                    n_recursion + 1,
+                )
+                .scaled(shape.reflectance().reflection);
 
                 // Go through all the lights, sum up the individual contributions
                 for light in lights {
@@ -99,6 +126,7 @@ fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3
                     // Check that another shape is not in the way, else skip this light
                     let mut shadow_orig: Vec3f;
 
+                    // - the starting point needs to be offset from the original shape
                     if light_dir.dot(&intersection.normal) < 0. {
                         shadow_orig = intersection.point - intersection.normal.scaled(1e-3);
                     } else {
@@ -111,7 +139,6 @@ fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3
 
                     // Handle diffuse lighting
                     let diffusion = diffusion_factor(&intersection, &light_dir);
-
                     light_intensity += (light.color * shape.reflectance().diffuse_color)
                         .scaled(diffusion)
                         .scaled(light.intensity);
@@ -120,7 +147,6 @@ fn cast_ray(dir: Vec3f, shapes: &Vec<&impl Shape>, lights: &Vec<&Light>) -> Vec3
                     let specular = (specular_factor(&intersection, &orig, &light_dir)
                         * shape.reflectance().specular)
                         .powf(shape.reflectance().specular_exponent);
-
                     light_intensity += light.color.scaled(specular);
                 }
                 return light_intensity;

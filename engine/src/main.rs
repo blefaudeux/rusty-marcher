@@ -9,8 +9,8 @@ use geometry::Vec3f;
 
 fn main() {
     // Allocate our dummy buffer
-    let width = 1280 as u32;
-    let height = 800 as u32;
+    let width = 2560 as u32;
+    let height = 1440 as u32;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     let mut reflectance = shapes::create_default_reflectance();
@@ -35,6 +35,7 @@ fn main() {
     );
 
     // Blue sphere
+    reflectance.reflection = 0.1;
     reflectance.specular_exponent = 40.;
 
     reflectance.diffuse_color = Vec3f {

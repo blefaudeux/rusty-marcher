@@ -21,8 +21,8 @@ pub fn create(center: Vec3f, radius: f64, reflectance: Reflectance) -> Sphere {
 
 // Sphere implements the Shape trait, you can intersect it
 impl Shape for Sphere {
-    fn intersect(&self, orig: Vec3f, dir: Vec3f) -> Option<Intersection> {
-        let line = self.center.clone() - orig;
+    fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
+        let line = self.center.clone() - *orig;
 
         let tca = line.dot(&dir);
         let d2 = line.dot(&line) - tca * tca;
@@ -45,7 +45,7 @@ impl Shape for Sphere {
         }
 
         // We've had an intersection
-        let intersection_point = orig + dir.scaled(t0);
+        let intersection_point = *orig + dir.scaled(t0);
 
         return Some(Intersection {
             point: intersection_point,

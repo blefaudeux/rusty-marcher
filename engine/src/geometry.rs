@@ -7,6 +7,13 @@ pub struct Vec3f {
     pub z: f64,
 }
 
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+pub struct Ray {
+    pub orig: Vec3f,
+    pub dir: Vec3f,
+    pub hit_number: u8,
+}
+
 impl Vec3f {
     // pub fn normalize(&mut self) {
     //     normalize(self);
