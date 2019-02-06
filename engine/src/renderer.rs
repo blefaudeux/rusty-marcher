@@ -1,6 +1,11 @@
 use framebuffer::FrameBuffer;
 use geometry::Vec3f;
 use lights::Light;
+use optics::reflect;
+use optics::reflect_ray;
+use optics::refract_ray;
+use shapes::find_closest_intersect;
+use shapes::intersect_shape_set;
 use shapes::Intersection;
 use shapes::Reflectance;
 use shapes::Shape;
@@ -28,9 +33,9 @@ impl Renderer {
         let mut index = 0 as usize;
         let orig = Vec3f::zero();
         let background = Vec3f {
-            x: 0.1,
-            y: 0.1,
-            z: 0.1,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         };
 
         for j in 0..frame.height {
@@ -53,36 +58,6 @@ impl Renderer {
     }
 }
 
-fn reflect_ray(incident: &Vec3f, normal: &Vec3f) -> Vec3f {
-    return *incident - normal.scaled(2. * incident.dot(normal));
-}
-
-fn refract_ray(incident: &Vec3f, mut normal: Vec3f, refractive_index: f64) -> Option<Vec3f> {
-    // See https://en.wikipedia.org/wiki/Snell%27s_law
-    let mut c = -normal.dot(incident);
-
-    // Could be that the ray is inside the object
-    let r = if c < 0. {
-        refractive_index
-    } else {
-        1. / refractive_index
-    };
-
-    if c < 0. {
-        c = -c;
-        normal = -normal;
-    }
-
-    let cos_theta_2 = 1. - r * r * (1. - c * c);
-
-    // Total reflection, no refraction
-    if cos_theta_2 < 0. {
-        return None;
-    }
-
-    return Some(incident.scaled(r) + normal.scaled(r * c - cos_theta_2.sqrt()).normalized());
-}
-
 fn diffusion_factor(intersection: &Intersection, light_dir: &Vec3f) -> f64 {
     return light_dir.dot(&intersection.normal).max(0.);
 }
@@ -90,34 +65,12 @@ fn diffusion_factor(intersection: &Intersection, light_dir: &Vec3f) -> f64 {
 fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3f) -> f64 {
     // Compute the light reflected vector at that point
     let incident = -*light_dir;
-    let reflected = reflect_ray(&incident, &intersection.normal);
+    let reflected = reflect(&incident, intersection.normal);
 
     // The specular reflection coeff is the dot product in between the purely
     // reflected ray and the viewerś point of view
     let dir_to_viewer = (*origin - intersection.point).normalized();
     return reflected.dot(&dir_to_viewer).max(0.);
-}
-
-fn intersect_shapes(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>, shape_ref: u8) -> bool {
-    let mut i = 0 as u8;
-    for shape in shapes {
-        if i == shape_ref {
-            continue;
-        }
-        i += 1;
-
-        let result = shape.intersect(orig, dir);
-
-        match result {
-            Some(_intersection) => {
-                return true;
-            }
-            None => {
-                continue;
-            }
-        }
-    }
-    return false;
 }
 
 fn direct_lighting(
@@ -126,15 +79,24 @@ fn direct_lighting(
     reflectance: &Reflectance,
     shapes: &Vec<&impl Shape>,
     lights: &Vec<&Light>,
-    shape_ref: u8,
 ) -> Vec3f {
+    // Compute the lighting contribution of direct illumination,
+    // meaning diffuse and specular lighting
+
     let mut light_intensity = Vec3f::zero();
+    let mut intersect_orig: Vec3f;
 
     for light in lights {
         let light_dir = (light.position - intersection.point).normalized();
 
-        if intersect_shapes(&intersection.point, &light_dir, shapes, shape_ref) {
-            // Cast shadow
+        if light_dir.dot(&intersection.normal) < 0. {
+            intersect_orig = intersection.point - intersection.normal.scaled(1e-3);
+        } else {
+            intersect_orig = intersection.point + intersection.normal.scaled(1e-3);
+        }
+
+        if intersect_shape_set(&intersect_orig, &light_dir, shapes) {
+            // Cast shadow, this light is not visible from this point of view
             continue;
         }
 
@@ -150,9 +112,40 @@ fn direct_lighting(
         light_intensity += light.color.scaled(specular);
     }
 
-    return light_intensity;
+    return light_intensity.scaled(reflectance.diffusion);
 }
 
+fn reflected_lighting(
+    incident: &Vec3f,
+    intersection: &Intersection,
+    reflectance: &Reflectance,
+    shapes: &Vec<&impl Shape>,
+    lights: &Vec<&Light>,
+    background: &Vec3f,
+    n_recursion: u8,
+) -> Vec3f {
+    // We may or may not have a reflected ray, angle dependent
+    let reflect = reflect_ray(incident, &intersection, reflectance.refractive_index);
+
+    match reflect {
+        Some(reflection) => {
+            return cast_ray(
+                &reflection.0,
+                &reflection.1,
+                shapes,
+                lights,
+                background,
+                n_recursion + 1,
+            )
+            .scaled(reflectance.reflection);
+        }
+        _ => {
+            return Vec3f::zero();
+        }
+    }
+}
+
+// Compute the lighting contribution of a refracted ray
 fn refracted_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
@@ -162,21 +155,14 @@ fn refracted_lighting(
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
-    let refract = refract_ray(incident, intersection.normal, reflectance.refractive_index);
+    // We may or may not have a reflected ray, angle dependent
+    let refract = refract_ray(incident, intersection, reflectance.refractive_index);
 
     match refract {
         Some(refracted_ray) => {
-            let refract_orig: Vec3f;
-            if refracted_ray.dot(&intersection.normal) > 0. {
-                refract_orig = intersection.point + intersection.normal.scaled(1e-3);
-            } else {
-                refract_orig = intersection.point - intersection.normal.scaled(1e-3);
-            }
-
-            // TODO: Compute the refraction coeff
             return cast_ray(
-                &refract_orig,
-                &refracted_ray,
+                &refracted_ray.0,
+                &refracted_ray.1,
                 shapes,
                 lights,
                 background,
@@ -189,45 +175,6 @@ fn refracted_lighting(
         }
     }
 }
-fn find_closest_intersect(
-    orig: &Vec3f,
-    dir: &Vec3f,
-    shapes: &Vec<&impl Shape>,
-) -> Option<(Intersection, u8)> {
-    let mut intersection_final = Intersection {
-        point: Vec3f::zero(),
-        normal: Vec3f::zero(),
-        diffuse_color: Vec3f::zero(),
-    };
-
-    let mut hit = false;
-    let mut shape_index = 0;
-    let mut shape_hit = 0;
-    let mut hist_closest = 0.;
-
-    for shape in shapes {
-        let test = shape.intersect(orig, dir);
-        match test {
-            Some(intersection) => {
-                let hit_dist = (intersection.point - *orig).dot(dir);
-
-                if !hit || hit_dist < hist_closest {
-                    intersection_final = intersection;
-                    hit = true;
-                    shape_hit = shape_index;
-                    hist_closest = hit_dist;
-                }
-            }
-            _ => {}
-        }
-        shape_index += 1;
-    }
-
-    if hit {
-        return Some((intersection_final, shape_hit as u8));
-    }
-    return None;
-}
 
 fn cast_ray(
     orig: &Vec3f,
@@ -237,8 +184,8 @@ fn cast_ray(
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
-    if n_recursion > 6 {
-        return Vec3f::zero();
+    if n_recursion > 3 {
+        return *background;
     }
 
     let result = find_closest_intersect(orig, dir, shapes);
@@ -246,57 +193,37 @@ fn cast_ray(
     match result {
         Some(intersect_result) => {
             let intersection = &intersect_result.0;
-            let i_shape = intersect_result.1;
-            let shape = shapes[i_shape as usize];
+            let shape_hit = shapes[intersect_result.1 as usize];
 
-            let mut light_intensity = Vec3f::zero();
-
-            // Compute the reflections recursively
-            let reflected_ray = reflect_ray(dir, &intersection.normal);
-            let mut reflection_orig: Vec3f;
-            if reflected_ray.dot(&intersection.normal) < 0. {
-                reflection_orig = intersection.point - intersection.normal.scaled(1e-3);
-            } else {
-                reflection_orig = intersection.point + intersection.normal.scaled(1e-3);
-            }
-
-            light_intensity += cast_ray(
-                &reflection_orig,
-                &reflected_ray,
-                shapes,
-                lights,
-                background,
-                n_recursion + 1,
-            )
-            .scaled(shape.reflectance().reflection);
+            let mut light_intensity = *background;
 
             // Go through all the lights, sum up the individual contributions
-            let mut direct_light = direct_lighting(
-                orig,
-                &intersection,
-                shape.reflectance(),
-                shapes,
-                lights,
-                i_shape,
-            );
+            light_intensity +=
+                direct_lighting(orig, &intersection, shape_hit.reflectance(), shapes, lights);
 
-            if n_recursion == 1 {
-                direct_light.scale(shape.reflectance().diffusion);
+            if shape_hit.reflectance().is_glass_like {
+                // Compute the reflections recursively
+                light_intensity += reflected_lighting(
+                    dir,
+                    &intersection,
+                    shape_hit.reflectance(),
+                    shapes,
+                    lights,
+                    background,
+                    n_recursion,
+                );
+
+                // Compute the refracted light recusively
+                light_intensity += refracted_lighting(
+                    dir,
+                    &intersection,
+                    shape_hit.reflectance(),
+                    shapes,
+                    lights,
+                    background,
+                    n_recursion,
+                );
             }
-
-            light_intensity += direct_light;
-
-            // Compute the refracted light
-            light_intensity += refracted_lighting(
-                dir,
-                &intersection,
-                shape.reflectance(),
-                shapes,
-                lights,
-                background,
-                n_recursion + 1,
-            );
-
             return light_intensity;
         }
         // No intersection, do nothing and test the next shape

@@ -49,6 +49,10 @@ impl Vec3f {
         return dot(self, other);
     }
 
+    pub fn squared_norm(&self) -> f64 {
+        return dot(self, self);
+    }
+
     // Common values
     pub fn zero() -> Vec3f {
         return Vec3f {
