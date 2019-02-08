@@ -3,6 +3,7 @@ mod geometry;
 mod lights;
 mod optics;
 mod renderer;
+// mod scene;
 mod shapes;
 mod sphere;
 
@@ -10,8 +11,8 @@ use geometry::Vec3f;
 
 fn main() {
     // Allocate our dummy buffer
-    let width = 1280 as u32;
-    let height = 800 as u32;
+    let width = 4000 as u32;
+    let height = 3000 as u32;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     let mut reflectance = shapes::create_default_reflectance();

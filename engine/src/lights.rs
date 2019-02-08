@@ -1,5 +1,6 @@
 use geometry::Vec3f;
 
+#[derive(Debug)]
 pub struct Light {
     pub position: Vec3f,
     pub color: Vec3f, // RGB
