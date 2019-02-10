@@ -4,6 +4,7 @@ use lights::Light;
 use optics::reflect;
 use optics::reflect_ray;
 use optics::refract_ray;
+use scene::Scene;
 use shapes::find_closest_intersect;
 use shapes::intersect_shape_set;
 use shapes::Intersection;
@@ -29,19 +30,20 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, frame: &mut FrameBuffer, shapes: Vec<&impl Shape>, lights: Vec<&Light>) {
+    pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) {
         let mut index = 0 as usize;
         let orig = Vec3f::zero();
         let background = Vec3f {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
+            x: 0.1,
+            y: 0.1,
+            z: 0.1,
         };
 
         for j in 0..frame.height {
             for i in 0..frame.width {
                 let dir = self.backproject(i, j);
-                frame.buffer[index] = cast_ray(&orig, &dir, &shapes, &lights, &background, 1);
+                frame.buffer[index] =
+                    cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1);
                 index += 1;
             }
         }
@@ -77,8 +79,8 @@ fn direct_lighting(
     origin: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<&impl Shape>,
-    lights: &Vec<&Light>,
+    shapes: &Vec<Box<dyn Shape>>,
+    lights: &Vec<Light>,
 ) -> Vec3f {
     // Compute the lighting contribution of direct illumination,
     // meaning diffuse and specular lighting
@@ -119,8 +121,8 @@ fn reflected_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<&impl Shape>,
-    lights: &Vec<&Light>,
+    shapes: &Vec<Box<dyn Shape>>,
+    lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -150,8 +152,8 @@ fn refracted_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<&impl Shape>,
-    lights: &Vec<&Light>,
+    shapes: &Vec<Box<dyn Shape>>,
+    lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -179,8 +181,8 @@ fn refracted_lighting(
 fn cast_ray(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<&impl Shape>,
-    lights: &Vec<&Light>,
+    shapes: &Vec<Box<dyn Shape>>,
+    lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -193,7 +195,7 @@ fn cast_ray(
     match result {
         Some(intersect_result) => {
             let intersection = &intersect_result.0;
-            let shape_hit = shapes[intersect_result.1 as usize];
+            let shape_hit = &shapes[intersect_result.1 as usize];
 
             let mut light_intensity = *background;
 

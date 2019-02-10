@@ -49,6 +49,14 @@ impl Vec3f {
         return dot(self, other);
     }
 
+    pub fn cross(&self, other: &Vec3f) -> Vec3f {
+        return Vec3f {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        };
+    }
+
     pub fn squared_norm(&self) -> f64 {
         return dot(self, self);
     }
