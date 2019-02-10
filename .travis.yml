@@ -11,5 +11,5 @@ matrix:
   fast_finish: true
 
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cd engine/src; cargo build --verbose --all; cd ../..
+  - cd engine/src; cargo test --verbose --all; cd ../..
