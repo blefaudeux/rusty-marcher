@@ -1,6 +1,4 @@
 use geometry::Vec3f;
-use polygon;
-use sphere;
 
 pub struct Intersection {
     pub point: Vec3f,
@@ -43,16 +41,11 @@ pub trait Shape {
     fn reflectance(&self) -> &Reflectance;
 }
 
-pub enum ImplShapes {
-    Sphere(sphere::Sphere),
-    Polygon(polygon::Polygon),
-}
-
 // ************************************************************
 // Some generic functions dealing with a collection of Shapes
 // ************************************************************
 
-pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>) -> bool {
+pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape>>) -> bool {
     // Check wether a ray intersects with *any* shape, in no particular order
     // Useful to compute cast shadows
     for shape in shapes {
@@ -73,7 +66,7 @@ pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<&impl Shape>)
 pub fn find_closest_intersect(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<&impl Shape>,
+    shapes: &Vec<Box<dyn Shape>>,
 ) -> Option<(Intersection, u8)> {
     // Intersect a ray with all the provided shapes,
     // return either the intersection the closest to the ray origin,

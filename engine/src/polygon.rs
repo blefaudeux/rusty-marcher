@@ -38,7 +38,7 @@ pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> Polygon {
 
 // Sphere implements the Shape trait, you can intersect it
 impl Shape for Polygon {
-    fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
+    fn intersect(&self, _orig: &Vec3f, _dir: &Vec3f) -> Option<Intersection> {
         return None;
     }
 
