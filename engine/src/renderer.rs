@@ -6,6 +6,7 @@ use optics::reflect_ray;
 use optics::refract_ray;
 use shapes::find_closest_intersect;
 use shapes::intersect_shape_set;
+use shapes::ImplShapes;
 use shapes::Intersection;
 use shapes::Reflectance;
 use shapes::Shape;
@@ -29,13 +30,13 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, frame: &mut FrameBuffer, shapes: Vec<&impl Shape>, lights: Vec<&Light>) {
+    pub fn render(&self, frame: &mut FrameBuffer, shapes: Vec<&ImplShapes>, lights: Vec<&Light>) {
         let mut index = 0 as usize;
         let orig = Vec3f::zero();
         let background = Vec3f {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
+            x: 0.1,
+            y: 0.1,
+            z: 0.1,
         };
 
         for j in 0..frame.height {

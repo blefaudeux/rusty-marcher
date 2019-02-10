@@ -1,4 +1,6 @@
 use geometry::Vec3f;
+use polygon;
+use sphere;
 
 pub struct Intersection {
     pub point: Vec3f,
@@ -32,13 +34,18 @@ pub fn create_default_reflectance() -> Reflectance {
     };
 }
 
-pub trait Shape: Copy {
+pub trait Shape {
     // A Shape is able to report an hypothetical intersection.
     // if true the intersect point, normal, and diffuse color
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection>;
 
     // A Shape exhibits a given behaviour with respect to lighting
     fn reflectance(&self) -> &Reflectance;
+}
+
+pub enum ImplShapes {
+    Sphere(sphere::Sphere),
+    Polygon(polygon::Polygon),
 }
 
 // ************************************************************
