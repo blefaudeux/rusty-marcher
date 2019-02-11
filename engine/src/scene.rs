@@ -25,7 +25,6 @@ pub struct Scene {
 pub fn create_default() -> Scene {
     let mut reflectance = create_default_reflectance();
 
-    // TODO: Move that to a JSON loader
     // Red sphere
     reflectance.diffuse_color = Vec3f {
         x: 0.8,
@@ -41,6 +40,33 @@ pub fn create_default() -> Scene {
             z: -16.,
         },
         4.,
+        reflectance,
+    );
+
+    // polygon
+    reflectance.diffuse_color = Vec3f {
+        x: 0.8,
+        y: 0.,
+        z: 0.9,
+    };
+    let polygon = polygon::create(
+        vec![
+            Vec3f {
+                x: -7.,
+                y: -2.,
+                z: -13.,
+            },
+            Vec3f {
+                x: -5.,
+                y: -3.,
+                z: -14.,
+            },
+            Vec3f {
+                x: -6.,
+                y: -1.,
+                z: -15.,
+            },
+        ],
         reflectance,
     );
 
@@ -101,33 +127,6 @@ pub fn create_default() -> Scene {
             z: -14.,
         },
         4.,
-        reflectance,
-    );
-
-    // White polygon
-    let polygon = polygon::create(
-        vec![
-            Vec3f {
-                x: 6.,
-                y: -1.,
-                z: -1.,
-            },
-            Vec3f {
-                x: -6.,
-                y: -1.,
-                z: -1.,
-            },
-            Vec3f {
-                x: -6.,
-                y: -1.,
-                z: -15.,
-            },
-            Vec3f {
-                x: 6.,
-                y: -1.,
-                z: -15.,
-            },
-        ],
         reflectance,
     );
 
