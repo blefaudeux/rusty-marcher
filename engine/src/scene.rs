@@ -11,17 +11,6 @@ pub struct Scene {
     pub shapes: Vec<Box<dyn Shape>>,
 }
 
-// use std::fs::File;
-
-// pub fn to_string(scene: &Scene) -> String {
-//     return serde_json::to_string_pretty(scene).unwrap();
-// }
-
-// pub fn from_file(filepath: String) -> Scene {
-//     let mut f = File::open(filepath).unwrap();
-//     return serde_json::from_reader(f).unwrap();
-// }
-
 pub fn create_default() -> Scene {
     let mut reflectance = create_default_reflectance();
 
@@ -45,26 +34,26 @@ pub fn create_default() -> Scene {
 
     // polygon
     reflectance.diffuse_color = Vec3f {
-        x: 0.8,
+        x: 0.6,
         y: 0.,
-        z: 0.9,
+        z: 0.7,
     };
     let polygon = polygon::create(
         vec![
             Vec3f {
-                x: -7.,
-                y: -2.,
-                z: -13.,
+                x: 6.,
+                y: 3.,
+                z: -8.,
             },
             Vec3f {
-                x: -5.,
-                y: -3.,
-                z: -14.,
+                x: 15.,
+                y: 0.,
+                z: -9.,
             },
             Vec3f {
-                x: -6.,
-                y: -1.,
-                z: -15.,
+                x: 7.,
+                y: -4.,
+                z: -8.,
             },
         ],
         reflectance,

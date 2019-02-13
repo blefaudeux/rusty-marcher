@@ -31,13 +31,16 @@ pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> ConvexPolygon {
     return ConvexPolygon {
         vertices: vertices,
         reflectance: reflectance,
-        plane_normal: edge_1.cross(&edge_2).normalized(),
+        plane_normal: -edge_1.cross(&edge_2).normalized(),
         plane_point: mean,
     };
 }
 
-fn left_of(a: &Vec3f, b: &Vec3f, c: &Vec3f) -> bool {
-    return (*a - *b).dot(&(*a - *c)) > 0.;
+// Check that the two vectors are angled by more than Pi
+// ! This supposes that the polygon is defined clockwise !
+// ! to be fixed in the create_polygon part !
+fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
+    return (*p1 - *a).cross(&(*p2 - *a)).z < 0.;
 }
 
 // Implementing the intersect and reflectance traits
@@ -59,28 +62,24 @@ impl Shape for ConvexPolygon {
 
         let intersect = *orig + dir.scaled(dist);
 
-        // Does it lie within or outside of the polygon ?
-        // Easy subcase: our particular polygon is convex, so we just need to test the cross products
-        let mut prev = left_of(&intersect, &self.vertices[0], &self.vertices[1]);
+        // Does it lie within or outside of the convex polygon ?
         let n_vertices = self.vertices.len();
 
-        for i in 1..n_vertices {
-            let next = left_of(
+        for i in 0..n_vertices {
+            if !inside(
                 &intersect,
                 &self.vertices[i],
                 &self.vertices[(i + 1) % n_vertices],
-            );
-            if prev ^ next {
+            ) {
                 return None;
             }
-            prev = next;
         }
 
         return Some(Intersection {
             point: intersect,
             normal: self.plane_normal,
             diffuse_color: self.reflectance.diffuse_color,
-        });
+        });;
     }
 
     fn reflectance(&self) -> &Reflectance {

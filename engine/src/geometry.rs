@@ -15,10 +15,6 @@ pub struct Ray {
 }
 
 impl Vec3f {
-    // pub fn normalize(&mut self) {
-    //     normalize(self);
-    // }
-
     pub fn normalized(&self) -> Vec3f {
         let mut other = *self;
         normalize(&mut other);
