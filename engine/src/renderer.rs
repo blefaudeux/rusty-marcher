@@ -10,6 +10,7 @@ use shapes::intersect_shape_set;
 use shapes::Intersection;
 use shapes::Reflectance;
 use shapes::Shape;
+use std::time::Instant;
 
 pub struct Renderer {
     pub fov: f64,
@@ -33,6 +34,8 @@ impl Renderer {
     pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) {
         let mut index = 0 as usize;
         let orig = Vec3f::zero();
+        let now = Instant::now();
+
         let background = Vec3f {
             x: 0.1,
             y: 0.1,
@@ -47,6 +50,9 @@ impl Renderer {
                 index += 1;
             }
         }
+        let ms_render_time = now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
+        let fps = 1000. / ms_render_time as f64; 
+        println!("Scene rendered in {} ms ({} fps)", ms_render_time, fps as u32);
     }
 
     fn backproject(&self, i: u32, j: u32) -> Vec3f {
