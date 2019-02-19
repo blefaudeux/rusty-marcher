@@ -32,6 +32,7 @@ pub fn create_default_reflectance() -> Reflectance {
     };
 }
 
+
 pub trait Shape {
     // A Shape is able to report an hypothetical intersection.
     // if true the intersect point, normal, and diffuse color
@@ -45,7 +46,7 @@ pub trait Shape {
 // Some generic functions dealing with a collection of Shapes
 // ************************************************************
 
-pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape>>) -> bool {
+pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape + Sync>>) -> bool {
     // Check wether a ray intersects with *any* shape, in no particular order
     // Useful to compute cast shadows
     for shape in shapes {
@@ -66,7 +67,7 @@ pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape
 pub fn find_closest_intersect(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<Box<dyn Shape>>,
+    shapes: &Vec<Box<dyn Shape + Sync>>,
 ) -> Option<(Intersection, u8)> {
     // Intersect a ray with all the provided shapes,
     // return either the intersection the closest to the ray origin,

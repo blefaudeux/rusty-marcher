@@ -1,3 +1,6 @@
+extern crate rayon;
+use renderer::rayon::prelude::*;
+
 use framebuffer::FrameBuffer;
 use geometry::Vec3f;
 use lights::Light;
@@ -32,7 +35,7 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 
 impl Renderer {
     pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) {
-        let mut index = 0 as usize;
+        
         let orig = Vec3f::zero();
         let now = Instant::now();
 
@@ -42,14 +45,28 @@ impl Renderer {
             z: 0.1,
         };
 
-        for j in 0..frame.height {
+        // Render using line batches, distribute them over threads
+        let lines: Vec<Vec<Vec3f>> = (0..frame.height).into_par_iter().map(|j| {
+            let mut line : Vec<Vec3f> = Vec::with_capacity(frame.width as usize);
+            
             for i in 0..frame.width {
                 let dir = self.backproject(i, j);
-                frame.buffer[index] =
-                    cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1);
-                index += 1;
+                line.push(cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1));                
+            }
+            return line;
+            }).collect();
+        
+        // Copy back in the FB, not very nice
+        let h = frame.height as usize;
+        let w = frame.width as usize;
+        
+        for j in 0..h {
+            for i in 0..w as usize {
+                frame.buffer[j * w + i] = lines[j][i];
             }
         }
+
+
         let ms_render_time = now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
         let fps = 1000. / ms_render_time as f64; 
         println!("Scene rendered in {} ms ({} fps)", ms_render_time, fps as u32);
@@ -85,7 +102,7 @@ fn direct_lighting(
     origin: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape>>,
+    shapes: &Vec<Box<dyn Shape + Sync>>,
     lights: &Vec<Light>,
 ) -> Vec3f {
     // Compute the lighting contribution of direct illumination,
@@ -127,7 +144,7 @@ fn reflected_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape>>,
+    shapes: &Vec<Box<dyn Shape + Sync>>,
     lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,
@@ -158,7 +175,7 @@ fn refracted_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape>>,
+    shapes: &Vec<Box<dyn Shape + Sync>>,
     lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,
@@ -187,7 +204,7 @@ fn refracted_lighting(
 fn cast_ray(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<Box<dyn Shape>>,
+    shapes: &Vec<Box<dyn Shape + Sync>>,
     lights: &Vec<Light>,
     background: &Vec3f,
     n_recursion: u8,

@@ -8,7 +8,7 @@ use sphere;
 
 pub struct Scene {
     pub lights: Vec<lights::Light>,
-    pub shapes: Vec<Box<dyn Shape>>,
+    pub shapes: Vec<Box<dyn Shape + Sync>>,
 }
 
 pub fn create_default() -> Scene {
