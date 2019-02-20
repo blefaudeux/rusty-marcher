@@ -40,39 +40,29 @@ impl Renderer {
         let now = Instant::now();
 
         let background = Vec3f {
-            x: 0.1,
-            y: 0.1,
-            z: 0.1,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         };
 
         // Render using line batches, distribute them over threads
-        let lines: Vec<Vec<Vec3f>> = (0..frame.height).into_par_iter().map(|j| {
-            let mut line : Vec<Vec3f> = Vec::with_capacity(frame.width as usize);
-            
-            for i in 0..frame.width {
-                let dir = self.backproject(i, j);
-                line.push(cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1));                
-            }
-            return line;
+        frame.buffer = (0..frame.height).into_par_iter().map(|j| {
+                let mut line : Vec<Vec3f> = Vec::with_capacity(frame.width as usize);
+                
+                for i in 0..frame.width {
+                    let dir = self.backproject(i, j);
+                    line.push(cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1));                
+                }
+                return line;
             }).collect();
         
-        // Copy back in the FB, not very nice
-        let h = frame.height as usize;
-        let w = frame.width as usize;
-        
-        for j in 0..h {
-            for i in 0..w as usize {
-                frame.buffer[j * w + i] = lines[j][i];
-            }
-        }
-
 
         let ms_render_time = now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
         let fps = 1000. / ms_render_time as f64; 
         println!("Scene rendered in {} ms ({} fps)", ms_render_time, fps as u32);
     }
 
-    fn backproject(&self, i: u32, j: u32) -> Vec3f {
+    fn backproject(&self, i: usize, j: usize) -> Vec3f {
         let dir = Vec3f {
             x: (2. * (i as f64 + 0.5) / self.width - 1.) * self.half_fov * self.ratio,
             y: -(2. * (j as f64 + 0.5) / self.height - 1.) * self.half_fov,

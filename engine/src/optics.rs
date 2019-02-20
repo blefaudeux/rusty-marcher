@@ -13,7 +13,7 @@ pub fn reflect_ray(
     // Compute incident angle
     // See https://en.wikipedia.org/wiki/Snell%27s_law
     let mut normal = intersection.normal.clone();
-    let mut c = -normal.dot(incident);
+    let mut c = normal.dot(incident);
 
     // Could be that the ray is inside the object
     let r = if c < 0. {

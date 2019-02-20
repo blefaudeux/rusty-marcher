@@ -38,7 +38,7 @@ pub fn create_default() -> Scene {
         y: 0.,
         z: 0.7,
     };
-    let polygon = polygon::create(
+    let triangle = polygon::create(
         vec![
             Vec3f {
                 x: 6.,
@@ -59,6 +59,44 @@ pub fn create_default() -> Scene {
         reflectance,
     );
 
+    // Floor
+    reflectance.diffusion = 1.0;
+    reflectance.specular = 1.;
+    reflectance.is_glass_like = true;
+    reflectance.refractive_index = 1.5;
+    reflectance.reflection = 0.5;
+    reflectance.diffuse_color = Vec3f {
+        x: 0.3,
+        y: 0.9,
+        z: 0.9,
+    };
+
+    let square = polygon::create(
+        vec![
+            Vec3f {
+                x: 15.,
+                y: -6.,
+                z: -3.,
+            },
+            Vec3f {
+                x: -15.,
+                y: -6.,
+                z: -3.,
+            },
+            Vec3f {
+                x: -20.,
+                y: -3.,
+                z: -50.,
+            },
+            Vec3f {
+                x: 20.,
+                y: -3.,
+                z: -50.,
+            },
+        ],
+        reflectance,
+    );
+
     // Blue sphere
     reflectance.specular = 1.0;
     reflectance.diffusion = 0.2;
@@ -74,7 +112,7 @@ pub fn create_default() -> Scene {
     let sphere_blue = sphere::create(
         Vec3f {
             x: -0.5,
-            y: -0.5,
+            y: -1.5,
             z: -5.,
         },
         2.,
@@ -111,7 +149,7 @@ pub fn create_default() -> Scene {
     };
     let sphere_white = sphere::create(
         Vec3f {
-            x: 6.,
+            x: -10.,
             y: 6.,
             z: -14.,
         },
@@ -133,7 +171,7 @@ pub fn create_default() -> Scene {
     let light_red = lights::create_light(
         Vec3f {
             x: 20.,
-            y: -20.,
+            y: 20.,
             z: 20.,
         },
         Vec3f {
@@ -151,7 +189,8 @@ pub fn create_default() -> Scene {
             Box::new(sphere_green),
             Box::new(sphere_red),
             Box::new(sphere_white),
-            Box::new(polygon),
+            Box::new(triangle),
+            Box::new(square),
         ],
     };
     return scene;
