@@ -88,3 +88,49 @@ pub fn refract_ray(
 
     return Some((refract_orig, refracted_ray));
 }
+
+#[test]
+fn test_reflection() {
+    let incident = Vec3f {
+        x: 0.5,
+        y: -0.5,
+        z: 0.,
+    };
+
+    let intersection = Intersection {
+        point: Vec3f::zero(),
+        normal: Vec3f {
+            x: 0.,
+            y: 1.,
+            z: 0.,
+        },
+        diffuse_color: Vec3f::zero(),
+    };
+
+    assert_eq![
+        reflect(&incident, intersection.normal),
+        Vec3f {
+            x: 0.5,
+            y: 0.5,
+            z: 0.
+        }
+    ];
+
+    let result = reflect_ray(&incident, &intersection, 1.5);
+
+    match result {
+        Some(reflected_ray) => {
+            assert_eq![
+                reflected_ray.1,
+                Vec3f {
+                    x: 0.5,
+                    y: 0.5,
+                    z: 0.
+                }
+            ];
+        }
+        None => {
+            assert![false];
+        }
+    }
+}
