@@ -1,6 +1,7 @@
 mod framebuffer;
 mod geometry;
 mod lights;
+mod loader_obj;
 mod optics;
 mod polygon;
 mod renderer;
