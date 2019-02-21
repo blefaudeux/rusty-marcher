@@ -57,9 +57,13 @@ impl Renderer {
             }).collect();
         
 
+        // Output some metrics
         let ms_render_time = now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
         let fps = 1000. / ms_render_time as f64; 
-        println!("Scene rendered in {} ms ({} fps)", ms_render_time, fps as u32);
+        let pix_scale = (frame.height * frame.width) as f64 / 1e6;
+        println!("Scene rendered in {} ms ({} fps, {:.2} MP/s)", ms_render_time, fps as u32, fps * pix_scale );
+        println!("{} threads used",rayon::current_num_threads());
+        
     }
 
     fn backproject(&self, i: usize, j: usize) -> Vec3f {
