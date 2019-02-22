@@ -12,7 +12,7 @@ mod sphere;
 fn main() {
     // Allocate our dummy buffer
     let width = 3200;
-    let height = 3200;
+    let height = 1600;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     // Create renderer and scene

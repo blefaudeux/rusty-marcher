@@ -38,12 +38,9 @@ impl Renderer {
         let orig = Vec3f::zero();
         let now = Instant::now();
 
-        let background = Vec3f {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
+        let background = Vec3f::zero();
 
+        // Distribute the computation over spatially coherent patches
         let patch_size = 32;
 
         if (frame.height % patch_size != 0) || (frame.width % patch_size != 0) {
@@ -59,7 +56,7 @@ impl Renderer {
             patch_size, n_patches
         );
 
-        // Render using line batches, distribute them over threads
+        // Render, distribute the patches over threads
         let render_queue: Vec<Vec<Vec3f>> = (0..n_patches)
             .into_par_iter()
             .map(|p| {
