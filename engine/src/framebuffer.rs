@@ -9,11 +9,15 @@ pub struct FrameBuffer {
     pub buffer: Vec<Vec<geometry::Vec3f>>,
 }
 
-pub fn create_frame_buffer(width_: usize, height_: usize) -> FrameBuffer {
+pub fn create_frame_buffer(width: usize, height: usize) -> FrameBuffer {
+    // Pre-allocate the whole buffer
+    let line_buffer: Vec<geometry::Vec3f> = vec![geometry::Vec3f::zero(); width];
+    let buffer = vec![line_buffer; height];
+
     return FrameBuffer {
-        width: width_,
-        height: height_,
-        buffer:  Vec::new(), // height * lines
+        width: width,
+        height: height,
+        buffer: buffer, // height * lines
     };
 }
 
@@ -31,13 +35,12 @@ impl FrameBuffer {
         let mut i_ = 0;
         for i in 0..self.height {
             for j in 0..self.width {
-                write_buffer[i_..i_+3].clone_from_slice(&[
+                write_buffer[i_..i_ + 3].clone_from_slice(&[
                     quantize(&self.buffer[i][j].x),
                     quantize(&self.buffer[i][j].y),
                     quantize(&self.buffer[i][j].z),
                 ]);
                 i_ += 3;
-
             }
         }
         file.write(&write_buffer)?;

@@ -1,7 +1,7 @@
 mod framebuffer;
 mod geometry;
 mod lights;
-mod loader_obj;
+// mod loader_obj;
 mod optics;
 mod polygon;
 mod renderer;
@@ -11,8 +11,8 @@ mod sphere;
 
 fn main() {
     // Allocate our dummy buffer
-    let width = 3000;
-    let height = 3000;
+    let width = 3200;
+    let height = 3200;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     // Create renderer and scene

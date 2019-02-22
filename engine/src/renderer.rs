@@ -35,7 +35,6 @@ pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
 
 impl Renderer {
     pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) {
-        
         let orig = Vec3f::zero();
         let now = Instant::now();
 
@@ -45,25 +44,78 @@ impl Renderer {
             z: 0.0,
         };
 
+        let patch_size = 32;
+
+        if (frame.height % patch_size != 0) || (frame.width % patch_size != 0) {
+            println!("Dimensions mismatch")
+        }
+
+        let n_height = frame.height / patch_size;
+        let n_width = frame.width / patch_size;
+        let n_patches = n_height * n_width;
+
+        println!(
+            "Rendering using patches of size {}, using {} patches overall",
+            patch_size, n_patches
+        );
+
         // Render using line batches, distribute them over threads
-        frame.buffer = (0..frame.height).into_par_iter().map(|j| {
-                let mut line : Vec<Vec3f> = Vec::with_capacity(frame.width as usize);
-                
-                for i in 0..frame.width {
-                    let dir = self.backproject(i, j);
-                    line.push(cast_ray(&orig, &dir, &scene.shapes, &scene.lights, &background, 1));                
+        let render_queue: Vec<Vec<Vec3f>> = (0..n_patches)
+            .into_par_iter()
+            .map(|p| {
+                // Pre-allocate the patch
+                let mut buffer: Vec<Vec3f> = Vec::with_capacity(patch_size * patch_size);
+
+                let p_line = p % n_width * patch_size;
+                let p_col = p / n_width * patch_size;
+
+                // Rebuild the patch starting point
+                for j in 0..patch_size {
+                    for i in 0..patch_size {
+                        let dir = self.backproject(p_line + i, p_col + j);
+                        buffer.push(cast_ray(
+                            &orig,
+                            &dir,
+                            &scene.shapes,
+                            &scene.lights,
+                            &background,
+                            1,
+                        ));
+                    }
                 }
-                return line;
-            }).collect();
-        
+                return buffer;
+            })
+            .collect();
+
+        // Reconstruct the picture in the framebuffer
+        let mut p_width = 0;
+        let mut p_height;
+
+        for p in 0..n_patches {
+            let mut k = 0;
+            p_height = (p / n_width) * patch_size;
+
+            for j in 0..patch_size {
+                for i in 0..patch_size {
+                    frame.buffer[p_height + j][p_width + i] = render_queue[p][k];
+                    k += 1;
+                }
+            }
+            p_width = (p_width + patch_size) % frame.width;
+        }
 
         // Output some metrics
-        let ms_render_time = now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
-        let fps = 1000. / ms_render_time as f64; 
+        let ms_render_time =
+            now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
+        let fps = 1000. / ms_render_time as f64;
         let pix_scale = (frame.height * frame.width) as f64 / 1e6;
-        println!("Scene rendered in {} ms ({} fps, {:.2} MP/s)", ms_render_time, fps as u32, fps * pix_scale );
-        println!("{} threads used",rayon::current_num_threads());
-        
+        println!(
+            "Scene rendered in {} ms ({} fps, {:.2} MP/s)",
+            ms_render_time,
+            fps as u32,
+            fps * pix_scale
+        );
+        println!("{} threads used", rayon::current_num_threads());
     }
 
     fn backproject(&self, i: usize, j: usize) -> Vec3f {
