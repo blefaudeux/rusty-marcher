@@ -68,7 +68,7 @@ impl Renderer {
                 let p_line_end = p_line + patch_size;
                 let p_col_end = p_col + patch_size;
 
-                // Rebuild the patch starting point
+                // Backproject locally, keep spatial coherency
                 for j in p_col..p_col_end {
                     for i in p_line..p_line_end {
                         let dir = self.backproject(i, j);
@@ -91,16 +91,18 @@ impl Renderer {
         let mut p_height;
 
         for (p, render_patch) in render_queue.iter().enumerate() {
-            let mut k = 0;
             p_height = (p / n_width) * patch_size;
+            let p_height_end = p_height + patch_size;
+            let p_width_end = p_width + patch_size;
 
-            for j in 0..patch_size {
-                for i in 0..patch_size {
-                    frame.buffer[p_height + j][p_width + i] = render_patch[k];
+            let mut k = 0;
+            for j in p_height..p_height_end {
+                for i in p_width..p_width_end {
+                    frame.buffer[j][i] = render_patch[k];
                     k += 1;
                 }
             }
-            p_width = (p_width + patch_size) % frame.width;
+            p_width = p_width_end % frame.width;
         }
 
         // Output some metrics
