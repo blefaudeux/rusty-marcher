@@ -32,7 +32,7 @@ pub trait Shape {
 
 impl Reflectance {
     pub fn create_default() -> Reflectance {
-        return Reflectance {
+        Reflectance {
             diffusion: 1.,
             diffuse_color: Vec3f::ones(),
             specular: 1.,
@@ -40,7 +40,7 @@ impl Reflectance {
             is_glass_like: false,
             reflection: 0.95,
             refractive_index: 1., // TODO: indices over R,G,B
-        };
+        }
     }
 }
 
@@ -48,7 +48,7 @@ impl Reflectance {
 // Some generic functions dealing with a collection of Shapes
 // ************************************************************
 
-pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape + Sync>>) -> bool {
+pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &[Box<dyn Shape + Sync>]) -> bool {
     // Check wether a ray intersects with *any* shape, in no particular order
     // Useful to compute cast shadows
     for shape in shapes {
@@ -63,13 +63,13 @@ pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &Vec<Box<dyn Shape
             }
         }
     }
-    return false;
+    false
 }
 
 pub fn find_closest_intersect(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<Box<dyn Shape + Sync>>,
+    shapes: &[Box<dyn Shape + Sync>],
 ) -> Option<(Intersection, u8)> {
     // Intersect a ray with all the provided shapes,
     // return either the intersection the closest to the ray origin,
@@ -82,30 +82,25 @@ pub fn find_closest_intersect(
     };
 
     let mut hit = false;
-    let mut shape_index = 0;
     let mut shape_hit = 0;
     let mut dist_closest = 0.;
 
-    for shape in shapes {
+    for (shape_index, shape) in shapes.iter().enumerate() {
         let test = shape.intersect(orig, dir);
-        match test {
-            Some(intersection) => {
-                let dist_hit = (intersection.point - *orig).squared_norm();
+        if let Some(intersection) = test {
+            let dist_hit = (intersection.point - *orig).squared_norm();
 
-                if !hit || dist_hit < dist_closest {
-                    intersection_final = intersection;
-                    hit = true;
-                    shape_hit = shape_index;
-                    dist_closest = dist_hit;
-                }
+            if !hit || dist_hit < dist_closest {
+                intersection_final = intersection;
+                hit = true;
+                shape_hit = shape_index;
+                dist_closest = dist_hit;
             }
-            _ => {}
         }
-        shape_index += 1;
     }
 
     if hit {
         return Some((intersection_final, shape_hit as u8));
     }
-    return None;
+    None
 }

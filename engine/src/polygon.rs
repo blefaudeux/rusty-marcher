@@ -28,19 +28,19 @@ pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> ConvexPolygon {
     let edge_1 = vertices[1] - vertices[0];
     let edge_2 = vertices[2] - vertices[1];
 
-    return ConvexPolygon {
-        vertices: vertices,
-        reflectance: reflectance,
+    ConvexPolygon {
+        vertices,
+        reflectance,
         plane_normal: -edge_1.cross(&edge_2).normalized(),
         plane_point: mean,
-    };
+    }
 }
 
 // Check that the two vectors are angled by more than Pi
 // ! This supposes that the polygon is defined clockwise !
 // ! to be fixed in the create_polygon part !
 fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
-    return (*p1 - *a).cross(&(*p2 - *a)).z < 0.;
+    (*p1 - *a).cross(&(*p2 - *a)).z < 0.
 }
 
 // Implementing the intersect and reflectance traits
@@ -75,14 +75,14 @@ impl Shape for ConvexPolygon {
             }
         }
 
-        return Some(Intersection {
+        Some(Intersection {
             point: intersect,
             normal: self.plane_normal,
             diffuse_color: self.reflectance.diffuse_color,
-        });;
+        })
     }
 
     fn reflectance(&self) -> &Reflectance {
-        return &self.reflectance;
+        &self.reflectance
     }
 }

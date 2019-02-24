@@ -11,9 +11,9 @@ pub struct Obj {
     reflectance: Reflectance, // FIXME: Ben. Needs to be set from materials
 }
 
-pub fn load(path: String) -> Option<Obj> {
+pub fn _load(path: String) -> Option<Obj> {
     let loaded = tobj::load_obj(&Path::new(&path));
-    if !loaded.is_ok() {
+    if loaded.is_err() {
         println!["Could not load obj from {}", path];
         return None;
     }
@@ -22,21 +22,21 @@ pub fn load(path: String) -> Option<Obj> {
     let (models, materials) = loaded.unwrap();
     println!["Models {}, materials {}", models.len(), materials.len()];
 
-    return Some(Obj {
-        models: models,
-        materials: materials,
+    Some(Obj {
+        models,
+        materials,
         reflectance: Reflectance::create_default(), // FIXME: Ben
-    });
+    })
 }
 
 impl Shape for Obj {
     fn intersect(&self, _orig: &Vec3f, _dir: &Vec3f) -> Option<Intersection> {
         // TODO: Ben
-        return None;
+        None
     }
 
     fn reflectance(&self) -> &Reflectance {
-        return &self.reflectance;
+        &self.reflectance
     }
 }
 
@@ -46,7 +46,7 @@ mod test {
 
     #[test]
     fn load_cornell_box() {
-        let test = load(String::from("../test_data/cornell_box.obj"));
+        let test = _load(String::from("../test_data/cornell_box.obj"));
         assert![test.is_some()];
     }
 

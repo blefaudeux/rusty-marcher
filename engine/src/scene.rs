@@ -183,7 +183,7 @@ impl Scene {
             0.8,
         );
 
-        let scene = Scene {
+        Scene {
             lights: vec![light_white, light_red],
             shapes: vec![
                 Box::new(sphere_blue),
@@ -193,7 +193,6 @@ impl Scene {
                 Box::new(triangle),
                 Box::new(square),
             ],
-        };
-        return scene;
+        }
     }
 }

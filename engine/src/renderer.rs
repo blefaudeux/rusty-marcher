@@ -23,14 +23,14 @@ pub struct Renderer {
     pub ratio: f64,
 }
 
-pub fn create_renderer(fov_: f64, frame: &FrameBuffer) -> Renderer {
-    return Renderer {
-        fov: fov_,
-        half_fov: (fov_ / 2.).tan(),
+pub fn create_renderer(fov: f64, frame: &FrameBuffer) -> Renderer {
+    Renderer {
+        fov,
+        half_fov: (fov / 2.).tan(),
         height: frame.height as f64,
         width: frame.width as f64,
         ratio: frame.width as f64 / frame.height as f64,
-    };
+    }
 }
 
 impl Renderer {
@@ -82,7 +82,7 @@ impl Renderer {
                         ));
                     }
                 }
-                return buffer;
+                buffer
             })
             .collect();
 
@@ -90,13 +90,13 @@ impl Renderer {
         let mut p_width = 0;
         let mut p_height;
 
-        for p in 0..n_patches {
+        for (p, render_patch) in render_queue.iter().enumerate() {
             let mut k = 0;
             p_height = (p / n_width) * patch_size;
 
             for j in 0..patch_size {
                 for i in 0..patch_size {
-                    frame.buffer[p_height + j][p_width + i] = render_queue[p][k];
+                    frame.buffer[p_height + j][p_width + i] = render_patch[k];
                     k += 1;
                 }
             }
@@ -105,7 +105,7 @@ impl Renderer {
 
         // Output some metrics
         let ms_render_time =
-            now.elapsed().as_secs() * 1_000 + now.elapsed().subsec_nanos() as u64 / 1_000_0000;
+            now.elapsed().as_secs() * 1_000 + u64::from(now.elapsed().subsec_nanos()) / 1_000_000;
         let fps = 1000. / ms_render_time as f64;
         let pix_scale = (frame.height * frame.width) as f64 / 1e6;
         println!(
@@ -124,12 +124,12 @@ impl Renderer {
             z: -1.,
         };
 
-        return dir.normalized();
+        dir.normalized()
     }
 }
 
 fn diffusion_factor(intersection: &Intersection, light_dir: &Vec3f) -> f64 {
-    return light_dir.dot(&intersection.normal).max(0.);
+    light_dir.dot(&intersection.normal).max(0.)
 }
 
 fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3f) -> f64 {
@@ -140,15 +140,15 @@ fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3
     // The specular reflection coeff is the dot product in between the purely
     // reflected ray and the viewerś point of view
     let dir_to_viewer = (*origin - intersection.point).normalized();
-    return reflected.dot(&dir_to_viewer).max(0.);
+    reflected.dot(&dir_to_viewer).max(0.)
 }
 
 fn direct_lighting(
     origin: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape + Sync>>,
-    lights: &Vec<Light>,
+    shapes: &[Box<dyn Shape + Sync>],
+    lights: &[Light],
 ) -> Vec3f {
     // Compute the lighting contribution of direct illumination,
     // meaning diffuse and specular lighting
@@ -165,7 +165,7 @@ fn direct_lighting(
             intersect_orig = intersection.point + intersection.normal.scaled(1e-3);
         }
 
-        if intersect_shape_set(&intersect_orig, &light_dir, shapes) {
+        if intersect_shape_set(&intersect_orig, &light_dir, &shapes[..]) {
             // Cast shadow, this light is not visible from this point of view
             continue;
         }
@@ -182,15 +182,15 @@ fn direct_lighting(
         light_intensity += light.color.scaled(specular);
     }
 
-    return light_intensity.scaled(reflectance.diffusion);
+    light_intensity.scaled(reflectance.diffusion)
 }
 
 fn reflected_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape + Sync>>,
-    lights: &Vec<Light>,
+    shapes: &[Box<dyn Shape + Sync>],
+    lights: &[Light],
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -198,20 +198,16 @@ fn reflected_lighting(
     let reflect = reflect_ray(incident, &intersection, reflectance.refractive_index);
 
     match reflect {
-        Some(reflection) => {
-            return cast_ray(
-                &reflection.0,
-                &reflection.1,
-                shapes,
-                lights,
-                background,
-                n_recursion + 1,
-            )
-            .scaled(reflectance.reflection);
-        }
-        _ => {
-            return Vec3f::zero();
-        }
+        Some(reflection) => cast_ray(
+            &reflection.0,
+            &reflection.1,
+            shapes,
+            lights,
+            background,
+            n_recursion + 1,
+        )
+        .scaled(reflectance.reflection),
+        _ => Vec3f::zero(),
     }
 }
 
@@ -220,8 +216,8 @@ fn refracted_lighting(
     incident: &Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
-    shapes: &Vec<Box<dyn Shape + Sync>>,
-    lights: &Vec<Light>,
+    shapes: &[Box<dyn Shape + Sync>],
+    lights: &[Light],
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -229,28 +225,24 @@ fn refracted_lighting(
     let refract = refract_ray(incident, intersection, reflectance.refractive_index);
 
     match refract {
-        Some(refracted_ray) => {
-            return cast_ray(
-                &refracted_ray.0,
-                &refracted_ray.1,
-                shapes,
-                lights,
-                background,
-                n_recursion + 1,
-            )
-            .scaled(1. - reflectance.reflection);
-        }
-        _ => {
-            return Vec3f::zero();
-        }
+        Some(refracted_ray) => cast_ray(
+            &refracted_ray.0,
+            &refracted_ray.1,
+            shapes,
+            lights,
+            background,
+            n_recursion + 1,
+        )
+        .scaled(1. - reflectance.reflection),
+        _ => Vec3f::zero(),
     }
 }
 
 fn cast_ray(
     orig: &Vec3f,
     dir: &Vec3f,
-    shapes: &Vec<Box<dyn Shape + Sync>>,
-    lights: &Vec<Light>,
+    shapes: &[Box<dyn Shape + Sync>],
+    lights: &[Light],
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
@@ -268,8 +260,13 @@ fn cast_ray(
             let mut light_intensity = *background;
 
             // Go through all the lights, sum up the individual contributions
-            light_intensity +=
-                direct_lighting(orig, &intersection, shape_hit.reflectance(), shapes, lights);
+            light_intensity += direct_lighting(
+                orig,
+                &intersection,
+                shape_hit.reflectance(),
+                &shapes[..],
+                &lights[..],
+            );
 
             if shape_hit.reflectance().is_glass_like {
                 // Compute the reflections recursively
@@ -277,8 +274,8 @@ fn cast_ray(
                     dir,
                     &intersection,
                     shape_hit.reflectance(),
-                    shapes,
-                    lights,
+                    &shapes[..],
+                    &lights[..],
                     background,
                     n_recursion,
                 );
@@ -288,20 +285,20 @@ fn cast_ray(
                     dir,
                     &intersection,
                     shape_hit.reflectance(),
-                    shapes,
-                    lights,
+                    &shapes[..],
+                    &lights[..],
                     background,
                     n_recursion,
                 );
             }
-            return light_intensity;
+            light_intensity
         }
         // No intersection, do nothing and test the next shape
         _ => {
             if n_recursion == 1 {
-                return *background;
+                *background
             } else {
-                return Vec3f::zero();
+                Vec3f::zero()
             }
         }
     }

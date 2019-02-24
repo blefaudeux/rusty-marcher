@@ -14,11 +14,11 @@ pub fn create_frame_buffer(width: usize, height: usize) -> FrameBuffer {
     let line_buffer: Vec<geometry::Vec3f> = vec![geometry::Vec3f::zero(); width];
     let buffer = vec![line_buffer; height];
 
-    return FrameBuffer {
-        width: width,
-        height: height,
-        buffer: buffer, // height * lines
-    };
+    FrameBuffer {
+        width,
+        height,
+        buffer, // height * lines
+    }
 }
 
 impl FrameBuffer {
@@ -28,7 +28,7 @@ impl FrameBuffer {
         // return file.write_all(buffer);
 
         // Standard PPM header
-        file.write(format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
+        file.write_all(format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
 
         // Write line by line, probably not needed thanks to buffering, but anyway..
         let mut write_buffer = vec![0 as u8; self.width * self.height * 3];
@@ -36,14 +36,14 @@ impl FrameBuffer {
         for i in 0..self.height {
             for j in 0..self.width {
                 write_buffer[i_..i_ + 3].clone_from_slice(&[
-                    quantize(&self.buffer[i][j].x),
-                    quantize(&self.buffer[i][j].y),
-                    quantize(&self.buffer[i][j].z),
+                    quantize(self.buffer[i][j].x),
+                    quantize(self.buffer[i][j].y),
+                    quantize(self.buffer[i][j].z),
                 ]);
                 i_ += 3;
             }
         }
-        file.write(&write_buffer)?;
+        file.write_all(&write_buffer)?;
         Ok(0)
     }
 
@@ -69,6 +69,6 @@ impl FrameBuffer {
     }
 }
 
-fn quantize(f: &f64) -> u8 {
-    return (255. * f.max(0.).min(1.)) as u8;
+fn quantize(f: f64) -> u8 {
+    (255. * f.max(0.).min(1.)) as u8
 }

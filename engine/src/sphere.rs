@@ -12,17 +12,17 @@ pub struct Sphere {
 }
 
 pub fn create(center: Vec3f, radius: f64, reflectance: Reflectance) -> Sphere {
-    return Sphere {
-        center: center,
+    Sphere {
+        center,
         radius_square: radius * radius,
-        reflectance: reflectance,
-    };
+        reflectance,
+    }
 }
 
 // Sphere implements the Shape trait, you can intersect it
 impl Shape for Sphere {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
-        let line = self.center.clone() - *orig;
+        let line = self.center - *orig;
 
         let tca = line.dot(&dir);
         let d2 = line.dot(&line) - tca * tca;
@@ -47,14 +47,14 @@ impl Shape for Sphere {
         // We've had an intersection
         let intersection_point = *orig + dir.scaled(t0);
 
-        return Some(Intersection {
+        Some(Intersection {
             point: intersection_point,
             normal: (intersection_point - self.center).normalized(),
             diffuse_color: self.reflectance.diffuse_color,
-        });
+        })
     }
 
     fn reflectance(&self) -> &Reflectance {
-        return &self.reflectance;
+        &self.reflectance
     }
 }

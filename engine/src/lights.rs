@@ -7,10 +7,10 @@ pub struct Light {
     pub intensity: f64,
 }
 
-pub fn create_light(pose: Vec3f, color: Vec3f, intensity: f64) -> Light {
-    return Light {
-        position: pose,
+pub fn create_light(position: Vec3f, color: Vec3f, intensity: f64) -> Light {
+    Light {
+        position,
         color: color.normalized_l0(),
-        intensity: intensity,
-    };
+        intensity,
+    }
 }

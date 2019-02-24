@@ -18,7 +18,7 @@ impl Vec3f {
     pub fn normalized(&self) -> Vec3f {
         let mut other = *self;
         normalize(&mut other);
-        return other;
+        other
     }
 
     pub fn normalize_l0(&mut self) {
@@ -28,7 +28,7 @@ impl Vec3f {
     pub fn normalized_l0(&self) -> Vec3f {
         let mut other = *self;
         other.normalize_l0();
-        return other;
+        other
     }
 
     pub fn scale(&mut self, s: f64) {
@@ -38,40 +38,40 @@ impl Vec3f {
     pub fn scaled(&self, s: f64) -> Vec3f {
         let mut other = *self;
         other.scale(s);
-        return other;
+        other
     }
 
     pub fn dot(&self, other: &Vec3f) -> f64 {
-        return dot(self, other);
+        dot(self, other)
     }
 
     pub fn cross(&self, other: &Vec3f) -> Vec3f {
-        return Vec3f {
+        Vec3f {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
-        };
+        }
     }
 
     pub fn squared_norm(&self) -> f64 {
-        return dot(self, self);
+        dot(self, self)
     }
 
     // Common values
     pub fn zero() -> Vec3f {
-        return Vec3f {
+        Vec3f {
             x: 0.,
             y: 0.,
             z: 0.,
-        };
+        }
     }
 
     pub fn ones() -> Vec3f {
-        return Vec3f {
+        Vec3f {
             x: 1.,
             y: 1.,
             z: 1.,
-        };
+        }
     }
 }
 
@@ -159,5 +159,5 @@ impl std::fmt::Display for Vec3f {
 }
 
 fn dot(v1: &Vec3f, v2: &Vec3f) -> f64 {
-    return (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) as f64;
+    (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z) as f64
 }
