@@ -65,11 +65,13 @@ impl Renderer {
 
                 let p_line = p % n_width * patch_size;
                 let p_col = p / n_width * patch_size;
+                let p_line_end = p_line + patch_size;
+                let p_col_end = p_col + patch_size;
 
                 // Rebuild the patch starting point
-                for j in 0..patch_size {
-                    for i in 0..patch_size {
-                        let dir = self.backproject(p_line + i, p_col + j);
+                for j in p_col..p_col_end {
+                    for i in p_line..p_line_end {
+                        let dir = self.backproject(i, j);
                         buffer.push(cast_ray(
                             &orig,
                             &dir,

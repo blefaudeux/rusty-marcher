@@ -1,12 +1,13 @@
 use geometry::Vec3f;
 
+#[derive(Copy, Clone, Debug)]
 pub struct Intersection {
     pub point: Vec3f,
     pub normal: Vec3f,
     pub diffuse_color: Vec3f,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Reflectance {
     // Direct lighting
     pub diffusion: f64,
@@ -20,19 +21,6 @@ pub struct Reflectance {
     pub refractive_index: f64,
 }
 
-pub fn create_default_reflectance() -> Reflectance {
-    return Reflectance {
-        diffusion: 1.,
-        diffuse_color: Vec3f::ones(),
-        specular: 1.,
-        specular_exponent: 30.,
-        is_glass_like: false,
-        reflection: 0.95,
-        refractive_index: 1., // TODO: indices over R,G,B
-    };
-}
-
-
 pub trait Shape {
     // A Shape is able to report an hypothetical intersection.
     // if true the intersect point, normal, and diffuse color
@@ -40,6 +28,20 @@ pub trait Shape {
 
     // A Shape exhibits a given behaviour with respect to lighting
     fn reflectance(&self) -> &Reflectance;
+}
+
+impl Reflectance {
+    pub fn create_default() -> Reflectance {
+        return Reflectance {
+            diffusion: 1.,
+            diffuse_color: Vec3f::ones(),
+            specular: 1.,
+            specular_exponent: 30.,
+            is_glass_like: false,
+            reflection: 0.95,
+            refractive_index: 1., // TODO: indices over R,G,B
+        };
+    }
 }
 
 // ************************************************************
