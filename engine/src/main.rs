@@ -20,13 +20,13 @@ fn main() {
     let mut scene = scene::Scene::create_default();
 
     // Load the test .obj file, add it to the scene
-    let payload = obj::_load(String::from("../test_data/cornell_box.obj"));
+    // let payload = obj::_load(String::from("../test_data/cornell_box.obj"));
 
-    if let Some(objects) = payload {
-        for obj in objects {
-            scene.shapes.push(Box::new(obj));
-        }
-    }
+    // if let Some(objects) = payload {
+    //     for obj in objects {
+    //         scene.shapes.push(Box::new(obj));
+    //     }
+    // }
 
     // Backproject rays, save intersection status in the buffer
     ray_marcher.render(&mut frame, &scene);

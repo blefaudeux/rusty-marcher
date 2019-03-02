@@ -46,8 +46,20 @@ pub fn _load(path: String) -> Option<Vec<Obj>> {
 
 impl Shape for Obj {
     fn intersect(&self, _orig: &Vec3f, _dir: &Vec3f) -> Option<Intersection> {
-        // Go through all the meshes, return the nearest intersection
-        // Naive way for now
+        // Go through all the triangles
+        for f in 0..self.model.mesh.indices.len() / 3 {
+            // Build this face (should be moved to offline)
+            let mut triangle = Vec::with_capacity(9);
+
+            for i in 0..3 {
+                let i_face = (self.model.mesh.indices[f * 3] + i) as usize;
+
+                for j in 0..3 {
+                    triangle.push(self.model.mesh.positions[3 * i_face + j])
+                }
+            }
+        }
+
         None
     }
 
