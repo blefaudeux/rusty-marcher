@@ -6,12 +6,12 @@ use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct Obj {
-    models: Vec<tobj::Model>,
-    materials: Vec<tobj::Material>,
-    reflectance: Reflectance, // FIXME: Ben. Needs to be set from materials
+    model: tobj::Model, // Model holds a mesh definition and a name
+    material: Option<tobj::Material>,
+    reflectance: Reflectance,
 }
 
-pub fn _load(path: String) -> Option<Obj> {
+pub fn _load(path: String) -> Option<Vec<Obj>> {
     let loaded = tobj::load_obj(&Path::new(&path));
     if loaded.is_err() {
         println!["Could not load obj from {}", path];
@@ -22,16 +22,32 @@ pub fn _load(path: String) -> Option<Obj> {
     let (models, materials) = loaded.unwrap();
     println!["Models {}, materials {}", models.len(), materials.len()];
 
-    Some(Obj {
-        models,
-        materials,
-        reflectance: Reflectance::create_default(), // FIXME: Ben
-    })
+    // Construct independent object from the models and materials
+    let mut objects = Vec::new();
+
+    for model in models {
+        let material = if let Some(id) = model.mesh.material_id {
+            Some(materials[id].clone())
+        } else {
+            None
+        };
+
+        let mut obj = Obj {
+            model,
+            material,
+            reflectance: Reflectance::create_default(),
+        };
+
+        objects.push(obj);
+    }
+
+    Some(objects)
 }
 
 impl Shape for Obj {
     fn intersect(&self, _orig: &Vec3f, _dir: &Vec3f) -> Option<Intersection> {
-        // TODO: Ben
+        // Go through all the meshes, return the nearest intersection
+        // Naive way for now
         None
     }
 
@@ -39,6 +55,8 @@ impl Shape for Obj {
         &self.reflectance
     }
 }
+
+// Intersect with one mesh
 
 #[cfg(test)]
 mod test {
