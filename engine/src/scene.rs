@@ -1,4 +1,3 @@
-extern crate serde_json;
 use geometry::Vec3f;
 use lights;
 use polygon;
