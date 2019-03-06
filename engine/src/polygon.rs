@@ -31,16 +31,15 @@ pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> ConvexPolygon {
     ConvexPolygon {
         vertices,
         reflectance,
-        plane_normal: -edge_1.cross(&edge_2).normalized(),
+        plane_normal: edge_1.cross(&edge_2).normalized(),
         plane_point: mean,
     }
 }
 
-// Check that the two vectors are angled by more than Pi
-// ! This supposes that the polygon is defined clockwise !
-// ! to be fixed in the create_polygon part !
+// Check that the two vectors are angled by less than Pi
+// ! This supposes that the polygon is defined counter-clockwise !
 fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
-    (*p1 - *a).cross(&(*p2 - *a)).z < 0.
+    (*p1 - *a).cross(&(*p2 - *a)).z > 0.
 }
 
 // Implementing the intersect and reflectance traits

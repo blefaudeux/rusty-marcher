@@ -41,8 +41,8 @@ impl Scene {
         let triangle = polygon::create(
             vec![
                 Vec3f {
-                    x: 6.,
-                    y: 3.,
+                    x: 7.,
+                    y: -4.,
                     z: -8.,
                 },
                 Vec3f {
@@ -51,8 +51,8 @@ impl Scene {
                     z: -9.,
                 },
                 Vec3f {
-                    x: 7.,
-                    y: -4.,
+                    x: 6.,
+                    y: 3.,
                     z: -8.,
                 },
             ],
@@ -74,14 +74,9 @@ impl Scene {
         let square = polygon::create(
             vec![
                 Vec3f {
-                    x: 15.,
-                    y: -6.,
-                    z: -3.,
-                },
-                Vec3f {
-                    x: -15.,
-                    y: -6.,
-                    z: -3.,
+                    x: 20.,
+                    y: -3.,
+                    z: -50.,
                 },
                 Vec3f {
                     x: -20.,
@@ -89,9 +84,14 @@ impl Scene {
                     z: -50.,
                 },
                 Vec3f {
-                    x: 20.,
-                    y: -3.,
-                    z: -50.,
+                    x: -15.,
+                    y: -6.,
+                    z: -3.,
+                },
+                Vec3f {
+                    x: 15.,
+                    y: -6.,
+                    z: -3.,
                 },
             ],
             reflectance,

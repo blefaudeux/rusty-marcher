@@ -26,7 +26,7 @@ impl Obj {
         }
     }
 }
-pub fn load(path: String) -> Option<Vec<Obj>> {
+pub fn load(path: String, scale: f64) -> Option<Vec<Obj>> {
     let loaded = tobj::load_obj(&Path::new(&path));
     if loaded.is_err() {
         println!["Could not load obj from {}", path];
@@ -41,6 +41,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
     let mut objects = Vec::new();
 
     for model in models {
+        // TODO: Handle material/reflectance properly
         let material = if let Some(id) = model.mesh.material_id {
             Some(materials[id].clone())
         } else {
@@ -48,18 +49,20 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
         };
 
         // Pre compute all the triangles
-        let mut triangles = Vec::with_capacity(model.mesh.indices.len() / 3);
+        let n_triangles = model.mesh.indices.len() / 3;
+        let mut triangles = Vec::with_capacity(n_triangles);
+        println!["Loading {} triangles from the obj model", n_triangles];
 
-        for f in 0..model.mesh.indices.len() / 3 {
+        for f in 0..n_triangles {
             let mut vertices = Vec::with_capacity(3);
 
             for i in 0..3 {
-                let i_face = (model.mesh.indices[f * 3] + i) as usize;
+                let mut i_v = model.mesh.indices[f * 3 + i] as usize;
 
                 vertices.push(Vec3f {
-                    x: model.mesh.positions[3 * i_face].into(),
-                    y: model.mesh.positions[3 * i_face + 1].into(),
-                    z: model.mesh.positions[3 * i_face + 2].into(),
+                    x: scale * model.mesh.positions[3 * i_v] as f64,
+                    y: scale * model.mesh.positions[3 * i_v + 1] as f64,
+                    z: scale * model.mesh.positions[3 * i_v + 2] as f64,
                 });
             }
             triangles.push(Triangle::create(vertices));
@@ -80,12 +83,31 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
 
 impl Shape for Obj {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
+        let mut hit_triangle = false;
+        let mut dist_closest = 0.;
+
+        let mut intersection_final = Intersection {
+            point: Vec3f::zero(),
+            normal: Vec3f::zero(),
+            diffuse_color: self.reflectance().diffuse_color,
+        };
+
+        // Go through all triangles, return the hit closest to ray origin
         for t in &self.triangles {
             let res = t.intersect(orig, dir);
-            if let Some(mut hit) = res {
-                hit.diffuse_color = self.reflectance().diffuse_color;
-                return Some(hit);
+
+            if let Some(intersection) = res {
+                let dist_hit = (intersection.point - *orig).squared_norm();
+                if !hit_triangle || dist_hit < dist_closest {
+                    intersection_final = intersection;
+                    hit_triangle = true;
+                    dist_closest = dist_hit;
+                }
             }
+        }
+
+        if hit_triangle {
+            return Some(intersection_final);
         }
         None
     }
@@ -103,7 +125,7 @@ mod test {
 
     #[test]
     fn load_cornell_box() {
-        let test = load(String::from("../test_data/cornell_box.obj"));
+        let test = load(String::from("../test_data/cornell_box.obj"), 1.);
         assert![test.is_some()];
     }
 

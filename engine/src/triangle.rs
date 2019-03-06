@@ -9,8 +9,9 @@ pub struct Triangle {
     pub center: Vec3f,
 }
 
+// Vertices need to be defined counter-clockwise
 fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
-    (*p1 - *a).cross(&(*p2 - *a)).z < 0.
+    (*p1 - *a).cross(&(*p2 - *a)).z > 0.
 }
 
 impl Triangle {

@@ -12,8 +12,8 @@ mod triangle;
 
 fn main() {
     // Allocate our dummy buffer
-    let width = 800;
-    let height = 600;
+    let width = 1280;
+    let height = 768;
     let mut frame = framebuffer::create_frame_buffer(width, height);
 
     // Create renderer and scene
@@ -22,11 +22,11 @@ fn main() {
 
     // Cornell Box on top
     // Load the default cornell box / obj
-    let payload = obj::load(String::from("../test_data/cornell_box.obj"));
+    let payload = obj::load(String::from("../test_data/cornell_box.obj"), 0.01);
 
     if let Some(objects) = payload {
         for mut obj in objects {
-            obj.offset(0., 0., -15.);
+            obj.offset(0., 0., -10.);
             scene.shapes.push(Box::new(obj));
         }
     }
