@@ -23,10 +23,10 @@ fn main() {
     // Cornell Box on top
     // Load the default cornell box / obj
     let payload = obj::load(String::from("../test_data/cornell_box.obj"), 0.01);
-
+    scene.shapes.clear();
     if let Some(objects) = payload {
         for mut obj in objects {
-            obj.offset(0., 0., -10.);
+            obj.offset(0., 0., -5.);
             scene.shapes.push(Box::new(obj));
         }
     }

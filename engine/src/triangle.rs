@@ -10,8 +10,8 @@ pub struct Triangle {
 }
 
 // Vertices need to be defined counter-clockwise
-fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
-    (*p1 - *a).cross(&(*p2 - *a)).z > 0.
+fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
+    (p1 - a).cross(&(p2 - a)).z > 0.
 }
 
 impl Triangle {
@@ -54,7 +54,7 @@ impl Triangle {
 
         // Does it lie within or outside of the convex polygon ?
         for i in 0..3 {
-            if !inside(&intersect, &self.vertices[i], &self.vertices[(i + 1) % 3]) {
+            if !inside(intersect, self.vertices[i], self.vertices[(i + 1) % 3]) {
                 return None;
             }
         }

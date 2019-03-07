@@ -57,16 +57,20 @@ pub fn load(path: String, scale: f64) -> Option<Vec<Obj>> {
 
             let triangles: Vec<Triangle> = (0..n_triangles)
                 .into_iter()
-                .map(|f| {
+                .map(|t| {
+                    // ! The original referential looks like OpenGL
+                    // Needs to be reversed into a right hand
+
                     // Collect all the vertices for this face
                     let vertices: Vec<Vec3f> = (0..3)
+                        .rev()
                         .into_iter()
-                        .map(|i| {
-                            let i_v = model.mesh.indices[f * 3 + i] as usize;
+                        .map(|v| {
+                            let i_v = model.mesh.indices[t * 3 + v] as usize;
                             Vec3f {
                                 x: scale * model.mesh.positions[3 * i_v] as f64,
                                 y: scale * model.mesh.positions[3 * i_v + 1] as f64,
-                                z: scale * model.mesh.positions[3 * i_v + 2] as f64,
+                                z: -scale * model.mesh.positions[3 * i_v + 2] as f64,
                             }
                         })
                         .collect();
