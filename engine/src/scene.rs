@@ -160,9 +160,9 @@ impl Scene {
         // Add a light to the scene
         let light_white = lights::create_light(
             Vec3f {
-                x: -20.,
-                y: 20.,
-                z: 20.,
+                x: 0.,
+                y: 0.,
+                z: 0.,
             },
             Vec3f::ones(), // white light
             1.,

@@ -18,11 +18,7 @@ impl Triangle {
     pub fn create(vertices: Vec<Vec3f>) -> Triangle {
         assert![vertices.len() == 3];
 
-        let mut mean = Vec3f::zero();
-        for v in &vertices {
-            mean += *v;
-        }
-        mean.scale(1. / 3.);
+        let mean = (vertices[0] + vertices[1] + vertices[2]).scaled(1. / 3.);
 
         // - The plane normal is the cross product of two consecutive edges..
         let edge_1 = vertices[1] - vertices[0];

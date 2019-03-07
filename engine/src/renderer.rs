@@ -120,13 +120,12 @@ impl Renderer {
     }
 
     fn backproject(&self, i: usize, j: usize) -> Vec3f {
-        let dir = Vec3f {
+        Vec3f {
             x: (2. * (i as f64 + 0.5) / self.width - 1.) * self.half_fov * self.ratio,
             y: -(2. * (j as f64 + 0.5) / self.height - 1.) * self.half_fov,
             z: -1.,
-        };
-
-        dir.normalized()
+        }
+        .normalized()
     }
 }
 

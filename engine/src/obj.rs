@@ -38,45 +38,52 @@ pub fn load(path: String, scale: f64) -> Option<Vec<Obj>> {
     println!["Models {}, materials {}", models.len(), materials.len()];
 
     // Construct independent object from the models and materials
-    let mut objects = Vec::new();
+    let objects: Vec<Obj> = models
+        .into_iter()
+        .map(|model| {
+            // TODO: Handle material/reflectance properly
+            let material = if let Some(id) = model.mesh.material_id {
+                Some(materials[id].clone())
+            } else {
+                None
+            };
 
-    for model in models {
-        // TODO: Handle material/reflectance properly
-        let material = if let Some(id) = model.mesh.material_id {
-            Some(materials[id].clone())
-        } else {
-            None
-        };
+            // Pre compute all the triangles
+            let n_triangles = model.mesh.indices.len() / 3;
+            println![
+                "Loading {} triangles from the object : {}",
+                n_triangles, model.name
+            ];
 
-        // Pre compute all the triangles
-        let n_triangles = model.mesh.indices.len() / 3;
-        let mut triangles = Vec::with_capacity(n_triangles);
-        println!["Loading {} triangles from the obj model", n_triangles];
+            let triangles: Vec<Triangle> = (0..n_triangles)
+                .into_iter()
+                .map(|f| {
+                    // Collect all the vertices for this face
+                    let vertices: Vec<Vec3f> = (0..3)
+                        .into_iter()
+                        .map(|i| {
+                            let i_v = model.mesh.indices[f * 3 + i] as usize;
+                            Vec3f {
+                                x: scale * model.mesh.positions[3 * i_v] as f64,
+                                y: scale * model.mesh.positions[3 * i_v + 1] as f64,
+                                z: scale * model.mesh.positions[3 * i_v + 2] as f64,
+                            }
+                        })
+                        .collect();
 
-        for f in 0..n_triangles {
-            let mut vertices = Vec::with_capacity(3);
+                    // Return a triangle out of it
+                    Triangle::create(vertices)
+                })
+                .collect();
 
-            for i in 0..3 {
-                let mut i_v = model.mesh.indices[f * 3 + i] as usize;
-
-                vertices.push(Vec3f {
-                    x: scale * model.mesh.positions[3 * i_v] as f64,
-                    y: scale * model.mesh.positions[3 * i_v + 1] as f64,
-                    z: scale * model.mesh.positions[3 * i_v + 2] as f64,
-                });
+            Obj {
+                model,
+                material,
+                reflectance: Reflectance::create_default(),
+                triangles,
             }
-            triangles.push(Triangle::create(vertices));
-        }
-
-        let mut obj = Obj {
-            model,
-            material,
-            reflectance: Reflectance::create_default(),
-            triangles,
-        };
-
-        objects.push(obj);
-    }
+        })
+        .collect();
 
     Some(objects)
 }
