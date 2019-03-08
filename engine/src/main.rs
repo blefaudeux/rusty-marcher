@@ -8,7 +8,6 @@ mod renderer;
 mod scene;
 mod shapes;
 mod sphere;
-mod triangle;
 
 fn main() {
     // Allocate our dummy buffer
@@ -22,16 +21,16 @@ fn main() {
 
     // Cornell Box on top
     // Load the default cornell box / obj
-    let payload = obj::load(String::from("../test_data/cornell_box.obj"), 0.01);
+    let payload = obj::load(String::from("../test_data/dodecahedron.obj"));
     scene.shapes.clear();
     if let Some(objects) = payload {
         for mut obj in objects {
-            obj.offset(0., 0., -5.);
+            obj.offset(-0.1, 0., -2.);
             scene.shapes.push(Box::new(obj));
         }
     }
 
-    // Backproject rays, save intersection status in the buffer
+    // Back-project rays, save intersection status in the buffer
     ray_marcher.render(&mut frame, &scene);
 
     // Save to file

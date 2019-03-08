@@ -37,13 +37,13 @@ impl Triangle {
         // Probably in need for some refactoring
 
         // Parallel to the plane
-        let dotprod = dir.dot(&self.normal);
-        if dotprod == 0. {
+        let dot_product = dir.dot(&self.normal);
+        if dot_product == 0. {
             return None;
         }
 
         // Compute the intersection point on the plane
-        let dist = (self.center - *orig).dot(&self.normal) / dotprod;
+        let dist = (self.center - *orig).dot(&self.normal) / dot_product;
 
         // Going away
         if dist < 0. {

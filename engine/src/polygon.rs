@@ -4,7 +4,7 @@ use shapes::Reflectance;
 use shapes::Shape;
 
 // A planar polygon
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ConvexPolygon {
     vertices: Vec<Vec3f>,
     reflectance: Reflectance,
@@ -12,34 +12,44 @@ pub struct ConvexPolygon {
     plane_point: Vec3f,
 }
 
-pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> ConvexPolygon {
-    // We want triangles, at minima
-    assert![vertices.len() > 2];
+#[allow(dead_code)]
+impl ConvexPolygon {
+    pub fn create(vertices: Vec<Vec3f>, reflectance: Reflectance) -> ConvexPolygon {
+        // We want triangles, at minima
+        assert![vertices.len() > 2];
 
-    // Pre-compute the plane coefficients
-    // - Compute the center of the polygon
-    let mut mean = Vec3f::zero();
-    for v in &vertices {
-        mean += *v;
+        // Pre-compute the plane coefficients
+        // - Compute the center of the polygon
+        let mut mean = Vec3f::zero();
+        for v in &vertices {
+            mean += *v;
+        }
+        mean.scale(1. / vertices.len() as f64);
+
+        // - The plane normal is the cross product of two consecutive edges..
+        let edge_1 = vertices[1] - vertices[0];
+        let edge_2 = vertices[2] - vertices[1];
+
+        ConvexPolygon {
+            vertices,
+            reflectance,
+            plane_normal: edge_1.cross(&edge_2).normalized(),
+            plane_point: mean,
+        }
     }
-    mean.scale(1. / vertices.len() as f64);
 
-    // - The plane normal is the cross product of two consecutive edges..
-    let edge_1 = vertices[1] - vertices[0];
-    let edge_2 = vertices[2] - vertices[1];
-
-    ConvexPolygon {
-        vertices,
-        reflectance,
-        plane_normal: edge_1.cross(&edge_2).normalized(),
-        plane_point: mean,
+    pub fn offset(&mut self, off: Vec3f) {
+        self.plane_point += off;
+        for mut v in &mut self.vertices {
+            *v += off;
+        }
     }
 }
 
 // Check that the two vectors are angled by less than Pi
 // ! This supposes that the polygon is defined counter-clockwise !
-fn inside(a: &Vec3f, p1: &Vec3f, p2: &Vec3f) -> bool {
-    (*p1 - *a).cross(&(*p2 - *a)).z > 0.
+fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
+    (p1 - a).cross(&(p2 - a)).z > 0.
 }
 
 // Implementing the intersect and reflectance traits
@@ -66,9 +76,9 @@ impl Shape for ConvexPolygon {
 
         for i in 0..n_vertices {
             if !inside(
-                &intersect,
-                &self.vertices[i],
-                &self.vertices[(i + 1) % n_vertices],
+                intersect,
+                self.vertices[i],
+                self.vertices[(i + 1) % n_vertices],
             ) {
                 return None;
             }

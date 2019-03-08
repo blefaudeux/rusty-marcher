@@ -14,6 +14,7 @@ pub struct Ray {
     pub hit_number: u8,
 }
 
+#[allow(dead_code)]
 impl Vec3f {
     pub fn normalized(&self) -> Vec3f {
         let mut other = *self;
@@ -55,6 +56,14 @@ impl Vec3f {
 
     pub fn squared_norm(&self) -> f64 {
         dot(self, self)
+    }
+
+    pub fn max(&self) -> f64 {
+        f64::max(f64::max(self.x, self.y), self.z)
+    }
+
+    pub fn min(&self) -> f64 {
+        f64::min(f64::max(self.x, self.y), self.z)
     }
 
     // Common values

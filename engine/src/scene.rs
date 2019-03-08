@@ -38,7 +38,7 @@ impl Scene {
             y: 0.,
             z: 0.7,
         };
-        let triangle = polygon::create(
+        let triangle = polygon::ConvexPolygon::create(
             vec![
                 Vec3f {
                     x: 7.,
@@ -71,7 +71,7 @@ impl Scene {
             z: 0.9,
         };
 
-        let square = polygon::create(
+        let square = polygon::ConvexPolygon::create(
             vec![
                 Vec3f {
                     x: 20.,
@@ -160,8 +160,8 @@ impl Scene {
         // Add a light to the scene
         let light_white = lights::create_light(
             Vec3f {
-                x: 0.,
-                y: 0.,
+                x: -1.,
+                y: 1.,
                 z: 0.,
             },
             Vec3f::ones(), // white light
