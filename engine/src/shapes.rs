@@ -68,7 +68,7 @@ pub fn intersect_shape_set(orig: &Vec3f, dir: &Vec3f, shapes: &[Box<dyn Shape + 
 
 pub fn find_closest_intersect(
     orig: &Vec3f,
-    dir: &Vec3f,
+    dir: Vec3f,
     shapes: &[Box<dyn Shape + Sync>],
 ) -> Option<(Intersection, u8)> {
     // Intersect a ray with all the provided shapes,
@@ -86,7 +86,7 @@ pub fn find_closest_intersect(
     let mut dist_closest = 0.;
 
     for (shape_index, shape) in shapes.iter().enumerate() {
-        let test = shape.intersect(orig, dir);
+        let test = shape.intersect(orig, &dir);
         if let Some(intersection) = test {
             let dist_hit = (intersection.point - *orig).squared_norm();
 

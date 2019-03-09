@@ -74,7 +74,7 @@ impl Renderer {
                         let dir = self.backproject(i, j);
                         buffer.push(cast_ray(
                             &orig,
-                            &dir,
+                            dir,
                             &scene.shapes,
                             &scene.lights,
                             &background,
@@ -130,18 +130,18 @@ impl Renderer {
 }
 
 fn diffusion_factor(intersection: &Intersection, light_dir: &Vec3f) -> f64 {
-    light_dir.dot(&intersection.normal).max(0.)
+    light_dir.dot(intersection.normal).max(0.)
 }
 
 fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3f) -> f64 {
     // Compute the light reflected vector at that point
     let incident = -*light_dir;
-    let reflected = reflect(&incident, intersection.normal);
+    let reflected = reflect(incident, intersection.normal);
 
     // The specular reflection coeff is the dot product in between the purely
     // reflected ray and the viewerś point of view
     let dir_to_viewer = (*origin - intersection.point).normalized();
-    reflected.dot(&dir_to_viewer).max(0.)
+    reflected.dot(dir_to_viewer).max(0.)
 }
 
 fn direct_lighting(
@@ -160,7 +160,7 @@ fn direct_lighting(
     for light in lights {
         let light_dir = (light.position - intersection.point).normalized();
 
-        if light_dir.dot(&intersection.normal) < 0. {
+        if light_dir.dot(intersection.normal) < 0. {
             intersect_orig = intersection.point - intersection.normal.scaled(1e-3);
         } else {
             intersect_orig = intersection.point + intersection.normal.scaled(1e-3);
@@ -187,7 +187,7 @@ fn direct_lighting(
 }
 
 fn reflected_lighting(
-    incident: &Vec3f,
+    incident: Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
     shapes: &[Box<dyn Shape + Sync>],
@@ -201,7 +201,7 @@ fn reflected_lighting(
     match reflect {
         Some(reflection) => cast_ray(
             &reflection.0,
-            &reflection.1,
+            reflection.1,
             shapes,
             lights,
             background,
@@ -214,7 +214,7 @@ fn reflected_lighting(
 
 // Compute the lighting contribution of a refracted ray
 fn refracted_lighting(
-    incident: &Vec3f,
+    incident: Vec3f,
     intersection: &Intersection,
     reflectance: &Reflectance,
     shapes: &[Box<dyn Shape + Sync>],
@@ -228,7 +228,7 @@ fn refracted_lighting(
     match refract {
         Some(refracted_ray) => cast_ray(
             &refracted_ray.0,
-            &refracted_ray.1,
+            refracted_ray.1,
             shapes,
             lights,
             background,
@@ -241,7 +241,7 @@ fn refracted_lighting(
 
 fn cast_ray(
     orig: &Vec3f,
-    dir: &Vec3f,
+    dir: Vec3f,
     shapes: &[Box<dyn Shape + Sync>],
     lights: &[Light],
     background: &Vec3f,

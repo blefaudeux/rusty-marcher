@@ -1,12 +1,12 @@
 use geometry::Vec3f;
 use shapes::Intersection;
 
-pub fn reflect(incident: &Vec3f, normal: Vec3f) -> Vec3f {
-    *incident - normal.scaled(2. * incident.dot(&normal))
+pub fn reflect(incident: Vec3f, normal: Vec3f) -> Vec3f {
+    incident - normal.scaled(2. * incident.dot(normal))
 }
 
 pub fn reflect_ray(
-    incident: &Vec3f,
+    incident: Vec3f,
     intersection: &Intersection,
     refractive_index: f64,
 ) -> Option<(Vec3f, Vec3f)> {
@@ -38,7 +38,7 @@ pub fn reflect_ray(
     let reflected_ray = reflect(incident, normal);
     let reflection_orig: Vec3f;
 
-    if reflected_ray.dot(&intersection.normal) < 0. {
+    if reflected_ray.dot(intersection.normal) < 0. {
         reflection_orig = intersection.point - intersection.normal.scaled(1e-4);
     } else {
         reflection_orig = intersection.point + intersection.normal.scaled(1e-4);
@@ -48,7 +48,7 @@ pub fn reflect_ray(
 }
 
 pub fn refract_ray(
-    incident: &Vec3f,
+    incident: Vec3f,
     intersection: &Intersection,
     refractive_index: f64,
 ) -> Option<(Vec3f, Vec3f)> {
@@ -79,7 +79,7 @@ pub fn refract_ray(
         (incident.scaled(r) + normal.scaled(r * c - cos_theta_2.sqrt())).normalized();
 
     // Compute the ray origin, offset from the origin shape
-    let refract_orig: Vec3f = if refracted_ray.dot(&normal) > 0. {
+    let refract_orig: Vec3f = if refracted_ray.dot(normal) > 0. {
         intersection.point + normal.scaled(1e-4)
     } else {
         intersection.point - normal.scaled(1e-4)
@@ -116,9 +116,9 @@ mod test {
             z: 0.,
         };
 
-        assert_eq![reflect(&incident, intersection.normal), reference_ray];
+        assert_eq![reflect(incident, intersection.normal), reference_ray];
 
-        let result = reflect_ray(&incident, &intersection, 1.5);
+        let result = reflect_ray(incident, &intersection, 1.5);
 
         match result {
             Some(reflected_ray) => {

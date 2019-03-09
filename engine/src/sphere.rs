@@ -24,8 +24,8 @@ impl Shape for Sphere {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
         let line = self.center - *orig;
 
-        let tca = line.dot(&dir);
-        let d2 = line.dot(&line) - tca * tca;
+        let tca = line.dot(*dir);
+        let d2 = line.dot(line) - tca * tca;
 
         if d2 > self.radius_square {
             return None;

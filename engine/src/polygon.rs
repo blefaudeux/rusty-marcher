@@ -33,7 +33,7 @@ impl ConvexPolygon {
         ConvexPolygon {
             vertices,
             reflectance,
-            plane_normal: edge_1.cross(&edge_2).normalized(),
+            plane_normal: edge_1.cross(edge_2).normalized(),
             plane_point: mean,
         }
     }
@@ -49,20 +49,20 @@ impl ConvexPolygon {
 // Check that the two vectors are angled by less than Pi
 // ! This supposes that the polygon is defined counter-clockwise !
 fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
-    (p1 - a).cross(&(p2 - a)).z > 0.
+    (p1 - a).cross(p2 - a).z > 0.
 }
 
 // Implementing the intersect and reflectance traits
 impl Shape for ConvexPolygon {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
         // Parallel to the plane
-        let dotprod = dir.dot(&self.plane_normal);
+        let dotprod = dir.dot(self.plane_normal);
         if dotprod == 0. {
             return None;
         }
 
         // Compute the intersection point on the plane
-        let dist = (self.plane_point - *orig).dot(&self.plane_normal) / dotprod;
+        let dist = (self.plane_point - *orig).dot(self.plane_normal) / dotprod;
 
         // Going away
         if dist < 0. {

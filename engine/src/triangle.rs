@@ -11,7 +11,7 @@ pub struct Triangle {
 
 // Vertices need to be defined counter-clockwise
 fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
-    (p1 - a).cross(&(p2 - a)).z > 0.
+    (p1 - a).cross(p2 - a).z > 0.
 }
 
 impl Triangle {
@@ -32,7 +32,7 @@ impl Triangle {
 
         Triangle {
             vertices,
-            normal: edge_1.cross(&edge_2).normalized(),
+            normal: edge_1.cross(edge_2).normalized(),
             center: mean,
         }
     }
@@ -43,13 +43,13 @@ impl Triangle {
         // Probably in need for some refactoring
 
         // Parallel to the plane
-        let dot_product = dir.dot(&self.normal);
+        let dot_product = dir.dot(self.normal);
         if dot_product == 0. {
             return None;
         }
 
         // Compute the intersection point on the plane
-        let dist = (self.center - *orig).dot(&self.normal) / dot_product;
+        let dist = (self.center - *orig).dot(self.normal) / dot_product;
 
         // Going away
         if dist < 0. {
