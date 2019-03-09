@@ -8,6 +8,7 @@ mod renderer;
 mod scene;
 mod shapes;
 mod sphere;
+mod triangle;
 
 use std::env;
 
@@ -37,16 +38,20 @@ fn main() {
     let ray_marcher = renderer::create_renderer(1.5, &frame);
     let mut scene = scene::Scene::create_default();
 
-    // Cornell Box on top
-    // Load the default cornell box / obj
-    // let payload = obj::load(filepath);
-    // scene.shapes.clear();
-    // if let Some(objects) = payload {
-    //     for mut obj in objects {
-    //         obj.offset(-0.1, 0., -2.);
-    //         scene.shapes.push(Box::new(obj));
-    //     }
-    // }
+    let payload = obj::load(filepath);
+    scene.shapes.clear();
+    if let Some(objects) = payload {
+        let off = geometry::Vec3f {
+            x: -0.1,
+            y: 0.,
+            z: -2.,
+        };
+
+        for mut obj in objects {
+            obj.offset(off);
+            scene.shapes.push(Box::new(obj));
+        }
+    }
 
     // Back-project rays, save intersection status in the buffer
     ray_marcher.render(&mut frame, &scene);

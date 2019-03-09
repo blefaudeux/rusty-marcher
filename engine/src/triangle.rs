@@ -15,6 +15,12 @@ fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
 }
 
 impl Triangle {
+    pub fn offset(&mut self, off: Vec3f) {
+        self.center += off;
+        for mut v in &mut self.vertices {
+            *v += off;
+        }
+    }
     pub fn create(vertices: Vec<Vec3f>) -> Triangle {
         assert![vertices.len() == 3];
 

@@ -4,10 +4,10 @@ use obj::rayon::prelude::*;
 extern crate tobj;
 
 use geometry::Vec3f;
-use polygon::*;
+// use polygon::*;
 use shapes::*;
 use std::path::Path;
-// use triangle::*;
+use triangle::*;
 
 #[derive(Clone, Debug)]
 struct BoundingBox {
@@ -41,16 +41,14 @@ pub struct Obj {
     model: tobj::Model, // Model holds a mesh definition and a name
     material: Option<tobj::Material>,
     reflectance: Reflectance,
-    triangles: Vec<ConvexPolygon>,
+    triangles: Vec<Triangle>,
     bounding_box: BoundingBox,
 }
 
 #[allow(dead_code)]
 impl Obj {
-    pub fn offset(&mut self, x: f64, y: f64, z: f64) {
+    pub fn offset(&mut self, off: Vec3f) {
         // Only move the triangles for now, not the mesh object
-        let off = Vec3f { x, y, z };
-
         for mut t in &mut self.triangles {
             t.offset(off);
         }
@@ -94,7 +92,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                 z: model.mesh.positions[2] as f64,
             });
 
-            let triangles: Vec<ConvexPolygon> = (0..n_triangles)
+            let triangles: Vec<Triangle> = (0..n_triangles)
                 .into_iter()
                 .map(|t| {
                     // Collect all the vertices for this face
@@ -121,7 +119,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                     }
 
                     // Return a triangle out of it
-                    ConvexPolygon::create(vertices, Reflectance::create_default())
+                    Triangle::create(vertices)
                 })
                 .collect();
 
