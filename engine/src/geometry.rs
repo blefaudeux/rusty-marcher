@@ -351,4 +351,40 @@ mod test {
             ];
         }
     }
+
+    #[test]
+    fn test_squared_norm() {
+        let a = Vec3f {
+            x: 1.,
+            y: -2.,
+            z: 3.,
+        };
+        assert_eq![a.squared_norm(), 14.];
+    }
+
+    #[test]
+    fn test_add() {
+        let a = Vec3f {
+            x: 1.,
+            y: -2.,
+            z: 3.,
+        };
+
+        let b = Vec3f {
+            x: 4.,
+            y: -2.,
+            z: 2.,
+        };
+
+        assert_eq![
+            a + b,
+            Vec3f {
+                x: 5.,
+                y: -4.,
+                z: 5.
+            }
+        ];
+
+        assert_eq![a - a, Vec3f::zero()];
+    }
 }

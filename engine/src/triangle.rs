@@ -42,6 +42,8 @@ impl Triangle {
         // but we know that we only have 3 sides here
         // Probably in need for some refactoring
 
+        assert![dir.squared_norm() == 1.];
+
         // Parallel to the plane
         let dot_product = dir.dot(self.normal);
         if dot_product == 0. {
@@ -71,4 +73,52 @@ impl Triangle {
             diffuse_color: Vec3f::zero(),
         })
     }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_intersect() {
+        use super::*;
+
+        let triangle = Triangle::create(vec![
+            Vec3f {
+                x: -1.,
+                y: 3.,
+                z: 2.2,
+            },
+            Vec3f {
+                x: -3.,
+                y: 0.2,
+                z: 2.1,
+            },
+            Vec3f {
+                x: 0.,
+                y: 1.,
+                z: 2.,
+            },
+        ]);
+
+        let orig = Vec3f {
+            x: -1.,
+            y: 2.,
+            z: 5.3,
+        };
+
+        let dir = Vec3f {
+            x: 0.1,
+            y: -0.2,
+            z: -3.,
+        }
+        .normalized();
+
+        let test = triangle.intersect(&orig, &dir);
+
+        if let Some(_intersection) = test {
+            assert![true];
+        } else {
+            assert![false];
+        }
+    }
+
 }
