@@ -55,6 +55,9 @@ fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
 // Implementing the intersect and reflectance traits
 impl Shape for ConvexPolygon {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
+        // Direction needs to be normalized
+        assert![(dir.squared_norm() - 1.).abs() < 1e-4];
+
         // Parallel to the plane
         let dotprod = dir.dot(self.plane_normal);
         if dotprod == 0. {

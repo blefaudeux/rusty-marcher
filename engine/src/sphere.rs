@@ -24,6 +24,9 @@ impl Shape for Sphere {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
         let line = self.center - *orig;
 
+        // Direction needs to be normalized
+        assert![(dir.squared_norm() - 1.).abs() < 1e-4];
+
         let tca = line.dot(*dir);
         let d2 = line.dot(line) - tca * tca;
 

@@ -163,7 +163,7 @@ impl Sub for Vec3f {
 
 impl std::fmt::Display for Vec3f {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "{} {} {}", self.x, self.y, self.z)
+        write!(f, "{:.2} {:.2} {:.2}", self.x, self.y, self.z)
     }
 }
 

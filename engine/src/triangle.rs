@@ -38,11 +38,10 @@ impl Triangle {
     }
 
     pub fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
-        // Very similar to a polygon intersection,
-        // but we know that we only have 3 sides here
-        // Probably in need for some refactoring
+        // Very similar to a polygon intersection, but we know that we only have 3 sides here
 
-        assert![dir.squared_norm() == 1.];
+        // Direction needs to be normalized
+        assert![(dir.squared_norm() - 1.).abs() < 1e-4];
 
         // Parallel to the plane
         let dot_product = dir.dot(self.normal);
