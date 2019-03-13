@@ -5,4 +5,4 @@ authors = ["Benjamin Lefaudeux <benjamin.lefaudeux@gmail.com>"]
 
 [dependencies]
 rayon = "*"
-tobj = "*"
+tobj = "0.1.6"

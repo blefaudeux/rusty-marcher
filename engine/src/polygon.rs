@@ -90,11 +90,7 @@ impl Shape for ConvexPolygon {
         Some(Intersection {
             point: intersect,
             normal: self.plane_normal,
-            diffuse_color: self.reflectance.diffuse_color,
+            reflectance: self.reflectance,
         })
-    }
-
-    fn reflectance(&self) -> &Reflectance {
-        &self.reflectance
     }
 }

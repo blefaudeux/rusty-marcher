@@ -11,7 +11,6 @@ use scene::Scene;
 use shapes::find_closest_intersect;
 use shapes::intersect_shape_set;
 use shapes::Intersection;
-use shapes::Reflectance;
 use shapes::Shape;
 use std::time::Instant;
 
@@ -69,8 +68,8 @@ impl Renderer {
                 let p_col_end = p_col + patch_size;
 
                 // Backproject locally, keep spatial coherency
-                for j in p_col..p_col_end {
-                    for i in p_line..p_line_end {
+                for i in p_col..p_col_end {
+                    for j in p_line..p_line_end {
                         let dir = self.backproject(i, j);
                         buffer.push(cast_ray(
                             &orig,
@@ -147,7 +146,6 @@ fn specular_factor(intersection: &Intersection, origin: &Vec3f, light_dir: &Vec3
 fn direct_lighting(
     origin: &Vec3f,
     intersection: &Intersection,
-    reflectance: &Reflectance,
     shapes: &[Box<dyn Shape + Sync>],
     lights: &[Light],
 ) -> Vec3f {
@@ -173,30 +171,34 @@ fn direct_lighting(
 
         // Handle diffuse lighting
         let diffusion = diffusion_factor(&intersection, &light_dir);
-        light_intensity += (light.color * reflectance.diffuse_color)
+        light_intensity += (light.color * intersection.reflectance.diffuse_color)
             .scaled(diffusion)
             .scaled(light.intensity);
 
         // Handle specular reflections
-        let specular = (specular_factor(&intersection, &origin, &light_dir) * reflectance.specular)
-            .powf(reflectance.specular_exponent);
+        let specular = (specular_factor(&intersection, &origin, &light_dir)
+            * intersection.reflectance.specular)
+            .powf(intersection.reflectance.specular_exponent);
         light_intensity += light.color.scaled(specular);
     }
 
-    light_intensity.scaled(reflectance.diffusion)
+    light_intensity.scaled(intersection.reflectance.diffusion)
 }
 
 fn reflected_lighting(
     incident: Vec3f,
     intersection: &Intersection,
-    reflectance: &Reflectance,
     shapes: &[Box<dyn Shape + Sync>],
     lights: &[Light],
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
     // We may or may not have a reflected ray, angle dependent
-    let reflect = reflect_ray(incident, &intersection, reflectance.refractive_index);
+    let reflect = reflect_ray(
+        incident,
+        &intersection,
+        intersection.reflectance.refractive_index,
+    );
 
     match reflect {
         Some(reflection) => cast_ray(
@@ -207,7 +209,7 @@ fn reflected_lighting(
             background,
             n_recursion + 1,
         )
-        .scaled(reflectance.reflection),
+        .scaled(intersection.reflectance.reflection),
         _ => Vec3f::zero(),
     }
 }
@@ -216,14 +218,17 @@ fn reflected_lighting(
 fn refracted_lighting(
     incident: Vec3f,
     intersection: &Intersection,
-    reflectance: &Reflectance,
     shapes: &[Box<dyn Shape + Sync>],
     lights: &[Light],
     background: &Vec3f,
     n_recursion: u8,
 ) -> Vec3f {
     // We may or may not have a reflected ray, angle dependent
-    let refract = refract_ray(incident, intersection, reflectance.refractive_index);
+    let refract = refract_ray(
+        incident,
+        intersection,
+        intersection.reflectance.refractive_index,
+    );
 
     match refract {
         Some(refracted_ray) => cast_ray(
@@ -234,7 +239,7 @@ fn refracted_lighting(
             background,
             n_recursion + 1,
         )
-        .scaled(1. - reflectance.reflection),
+        .scaled(1. - intersection.reflectance.reflection),
         _ => Vec3f::zero(),
     }
 }
@@ -256,25 +261,17 @@ fn cast_ray(
     match result {
         Some(intersect_result) => {
             let intersection = &intersect_result.0;
-            let shape_hit = &shapes[intersect_result.1 as usize];
 
             let mut light_intensity = *background;
 
             // Go through all the lights, sum up the individual contributions
-            light_intensity += direct_lighting(
-                orig,
-                &intersection,
-                shape_hit.reflectance(),
-                &shapes[..],
-                &lights[..],
-            );
+            light_intensity += direct_lighting(orig, &intersection, &shapes[..], &lights[..]);
 
-            if shape_hit.reflectance().is_glass_like {
+            if intersection.reflectance.is_glass_like {
                 // Compute the reflections recursively
                 light_intensity += reflected_lighting(
                     dir,
                     &intersection,
-                    shape_hit.reflectance(),
                     &shapes[..],
                     &lights[..],
                     background,
@@ -285,7 +282,6 @@ fn cast_ray(
                 light_intensity += refracted_lighting(
                     dir,
                     &intersection,
-                    shape_hit.reflectance(),
                     &shapes[..],
                     &lights[..],
                     background,

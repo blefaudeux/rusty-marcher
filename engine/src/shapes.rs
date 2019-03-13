@@ -4,7 +4,17 @@ use geometry::Vec3f;
 pub struct Intersection {
     pub point: Vec3f,
     pub normal: Vec3f,
-    pub diffuse_color: Vec3f,
+    pub reflectance: Reflectance,
+}
+
+impl Intersection {
+    pub fn create_default() -> Intersection {
+        Intersection {
+            point: Vec3f::zero(),
+            normal: Vec3f::zero(),
+            reflectance: Reflectance::create_default(),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -26,8 +36,7 @@ pub trait Shape {
     // if true the intersect point, normal, and diffuse color
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection>;
 
-    // A Shape exhibits a given behaviour with respect to lighting
-    fn reflectance(&self) -> &Reflectance;
+    // Add Bounding box ?
 }
 
 impl Reflectance {
@@ -75,11 +84,7 @@ pub fn find_closest_intersect(
     // return either the intersection the closest to the ray origin,
     // or nothing
 
-    let mut intersection_final = Intersection {
-        point: Vec3f::zero(),
-        normal: Vec3f::zero(),
-        diffuse_color: Vec3f::zero(),
-    };
+    let mut intersection_final = Intersection::create_default();
 
     let mut hit = false;
     let mut shape_hit = 0;

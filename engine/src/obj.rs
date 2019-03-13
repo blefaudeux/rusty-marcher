@@ -40,7 +40,7 @@ impl BoundingBox {
 pub struct Obj {
     model: tobj::Model, // Model holds a mesh definition and a name
     material: Option<tobj::Material>,
-    reflectance: Reflectance,
+    reflectances: Vec<Reflectance>,
     triangles: Vec<Triangle>,
     bounding_box: BoundingBox,
 }
@@ -123,10 +123,25 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                 })
                 .collect();
 
+            // Get arbitrary reflectance values, continuous
+            let reflectances: Vec<Reflectance> = (0..n_triangles)
+                .into_iter()
+                .map(|t| {
+                    let mut r = Reflectance::create_default();
+                    let t_f = t as f64;
+                    r.diffuse_color = Vec3f {
+                        x: 1. - t_f / n_triangles as f64,
+                        y: t_f / n_triangles as f64,
+                        z: 1.,
+                    };
+                    r
+                })
+                .collect();
+
             Obj {
                 model,
                 material,
-                reflectance: Reflectance::create_default(),
+                reflectances,
                 triangles,
                 bounding_box,
             }
@@ -138,25 +153,25 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
 
 impl Shape for Obj {
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection> {
+        let mut intersection_final = Intersection::create_default();
+
         let mut hit_triangle = false;
         let mut dist_closest = 0.;
 
-        let mut intersection_final = Intersection {
-            point: Vec3f::zero(),
-            normal: Vec3f::zero(),
-            diffuse_color: self.reflectance().diffuse_color,
-        };
-
         // Go through all triangles, return the hit closest to ray origin
-        for t in &self.triangles {
+        for (t_i, t) in self.triangles.iter().enumerate() {
             let res = t.intersect(orig, dir);
 
             if let Some(intersection) = res {
                 let dist_hit = (intersection.point - *orig).squared_norm();
                 if !hit_triangle || dist_hit < dist_closest {
                     // FIXME: we don't handle per-triangle color here, a bit broken
-                    intersection_final.point = intersection.point;
-                    intersection_final.normal = intersection.normal;
+                    intersection_final = Intersection {
+                        point: intersection.point,
+                        normal: intersection.normal,
+                        reflectance: self.reflectances[t_i],
+                    };
+
                     hit_triangle = true;
                     dist_closest = dist_hit;
                 }
@@ -167,10 +182,6 @@ impl Shape for Obj {
             return Some(intersection_final);
         }
         None
-    }
-
-    fn reflectance(&self) -> &Reflectance {
-        &self.reflectance
     }
 }
 

@@ -91,6 +91,7 @@ pub fn refract_ray(
 #[cfg(test)]
 mod test {
     use super::*;
+    use shapes::Reflectance;
 
     #[test]
     fn test_reflection() {
@@ -107,7 +108,7 @@ mod test {
                 y: 1.,
                 z: 0.,
             },
-            diffuse_color: Vec3f::zero(),
+            reflectance: Reflectance::create_default(),
         };
 
         let reference_ray = Vec3f {

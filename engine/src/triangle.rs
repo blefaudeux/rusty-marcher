@@ -69,7 +69,7 @@ impl Triangle {
         Some(Intersection {
             point: intersect,
             normal: self.normal,
-            diffuse_color: Vec3f::zero(),
+            reflectance: Reflectance::create_default(),
         })
     }
 }

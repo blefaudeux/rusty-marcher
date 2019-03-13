@@ -53,11 +53,7 @@ impl Shape for Sphere {
         Some(Intersection {
             point: intersection_point,
             normal: (intersection_point - self.center).normalized(),
-            diffuse_color: self.reflectance.diffuse_color,
+            reflectance: self.reflectance,
         })
-    }
-
-    fn reflectance(&self) -> &Reflectance {
-        &self.reflectance
     }
 }
