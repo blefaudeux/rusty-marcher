@@ -79,8 +79,7 @@ mod test {
     #[test]
     fn test_intersect() {
         use super::*;
-
-        let triangle = Triangle::create(vec![
+        let vertices = vec![
             Vec3f {
                 x: -1.,
                 y: 3.,
@@ -96,7 +95,11 @@ mod test {
                 y: 1.,
                 z: 2.,
             },
-        ]);
+        ];
+
+        let triangle1 = Triangle::create(vec![vertices[0], vertices[1], vertices[2]]);
+        let triangle2 = Triangle::create(vec![vertices[1], vertices[2], vertices[0]]);
+        let triangle3 = Triangle::create(vec![vertices[2], vertices[0], vertices[1]]);
 
         let orig = Vec3f {
             x: -1.,
@@ -111,13 +114,17 @@ mod test {
         }
         .normalized();
 
-        let test = triangle.intersect(&orig, &dir);
+        let test1 = triangle1.intersect(&orig, &dir).unwrap();
+        let test2 = triangle2.intersect(&orig, &dir).unwrap();
+        let test3 = triangle3.intersect(&orig, &dir).unwrap();
 
-        if let Some(_intersection) = test {
-            assert![true];
-        } else {
-            assert![false];
-        }
+        assert![(test1.point - test2.point).squared_norm() < 1e-3];
+        assert![(test1.normal - test2.normal).squared_norm() < 1e-3];
+
+        assert![(test1.point - test3.point).squared_norm() < 1e-3];
+        assert![(test1.normal - test3.normal).squared_norm() < 1e-3];
+
+        assert![(triangle1.normal.squared_norm() - 1.).abs() < 1e-3];
+        assert![triangle1.normal.dot(dir) < 0.];
     }
-
 }

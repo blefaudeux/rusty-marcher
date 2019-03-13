@@ -47,7 +47,7 @@ impl Shape for Sphere {
             return None;
         }
 
-        // We've had an intersection
+        // We've an intersection
         let intersection_point = *orig + dir.scaled(t0);
 
         Some(Intersection {
