@@ -31,8 +31,12 @@ impl BoundingBox {
     }
 
     fn scale(&self) -> f64 {
-        let diff = self.max - self.min;
+        let diff = (self.max - self.min).abs();
         diff.max()
+    }
+
+    fn middle(&self) -> Vec3f {
+        (self.max + self.min).scaled(0.5)
     }
 }
 
@@ -54,6 +58,7 @@ impl Obj {
         }
     }
 }
+
 pub fn load(path: String) -> Option<Vec<Obj>> {
     let loaded = tobj::load_obj(&Path::new(&path));
     if loaded.is_err() {
@@ -61,8 +66,9 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
         return None;
     }
 
-    println!["Loaded obj from {}", path];
     let (models, materials) = loaded.unwrap();
+
+    println!["Loaded obj from {}", path];
     println!["Models {}, materials {}", models.len(), materials.len()];
 
     // Construct independent object from the models and materials
@@ -112,8 +118,12 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
 
                     // Scale all the vertices
                     if bounding_box.scale() > 0. {
-                        let s = 1. / bounding_box.scale();
                         for mut v in &mut vertices {
+                            v.add(-bounding_box.middle());
+                        }
+
+                        let s = 1. / bounding_box.scale();
+                        for v in &mut vertices {
                             v.scale(s);
                         }
                     }

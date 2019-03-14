@@ -36,6 +36,14 @@ impl Vec3f {
         scale(self, s);
     }
 
+    pub fn abs(&self) -> Vec3f {
+        Vec3f {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+        }
+    }
+
     pub fn scaled(&self, s: f64) -> Vec3f {
         let mut other = *self;
         other.scale(s);
@@ -56,6 +64,12 @@ impl Vec3f {
 
     pub fn squared_norm(self) -> f64 {
         dot(self, self)
+    }
+
+    pub fn add(&mut self, other: Vec3f) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
     }
 
     pub fn max(&self) -> f64 {

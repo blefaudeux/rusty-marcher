@@ -37,7 +37,11 @@ impl Renderer {
         let orig = Vec3f::zero();
         let now = Instant::now();
 
-        let background = Vec3f::zero();
+        let background = Vec3f {
+            x: 0.1,
+            y: 0.1,
+            z: 0.1,
+        };
 
         // Distribute the computation over spatially coherent patches
         let patch_size = 32;
@@ -70,10 +74,9 @@ impl Renderer {
                 // Backproject locally, keep spatial coherency
                 for i in p_col..p_col_end {
                     for j in p_line..p_line_end {
-                        let dir = self.backproject(i, j);
                         buffer.push(cast_ray(
                             &orig,
-                            dir,
+                            self.backproject(j, i),
                             &scene.shapes,
                             &scene.lights,
                             &background,
@@ -120,8 +123,8 @@ impl Renderer {
 
     fn backproject(&self, i: usize, j: usize) -> Vec3f {
         Vec3f {
-            x: (2. * (i as f64 + 0.5) / self.width - 1.) * self.half_fov * self.ratio,
-            y: -(2. * (j as f64 + 0.5) / self.height - 1.) * self.half_fov,
+            x: 2. * (i as f64 / self.width - 0.5) * self.half_fov * self.ratio,
+            y: -2. * (j as f64 / self.height - 0.5) * self.half_fov,
             z: -1.,
         }
         .normalized()
@@ -292,7 +295,7 @@ fn cast_ray(
         }
         // No intersection, do nothing and test the next shape
         _ => {
-            if n_recursion == 1 {
+            if n_recursion > 1 {
                 *background
             } else {
                 Vec3f::zero()

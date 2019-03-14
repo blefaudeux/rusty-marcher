@@ -16,7 +16,7 @@ fn main() {
     // Allocate our dummy buffer
     let mut width = 1280;
     let mut height = 768;
-    let mut filepath = String::from(String::from("../test_data/dodecahedron.obj"));
+    let mut filepath = String::from(String::from("../test_data/cornell_box.obj"));
 
     // Handle command-line arguments
     let args: Vec<String> = env::args().collect();
@@ -42,7 +42,7 @@ fn main() {
     scene.shapes.clear();
     if let Some(objects) = payload {
         let off = geometry::Vec3f {
-            x: -0.1,
+            x: 0.,
             y: 0.,
             z: -2.,
         };
