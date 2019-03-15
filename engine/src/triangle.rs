@@ -21,6 +21,13 @@ impl Triangle {
             *v += off;
         }
     }
+
+    pub fn scale(&mut self, s: f64) {
+        for mut v in &mut self.vertices {
+            v.scale(s);
+        }
+    }
+
     pub fn create(vertices: Vec<Vec3f>) -> Triangle {
         assert![vertices.len() == 3];
 

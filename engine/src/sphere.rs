@@ -1,14 +1,13 @@
 use geometry::Vec3f;
-use shapes::Intersection;
-use shapes::Reflectance;
-use shapes::Shape;
+use shapes::*;
 
 // Our most basic shape: a simple sphere, easy to intersect
-#[derive(Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Sphere {
     center: Vec3f,
     radius_square: f64,
     reflectance: Reflectance,
+    bounding_box: BoundingBox,
 }
 
 pub fn create(center: Vec3f, radius: f64, reflectance: Reflectance) -> Sphere {
@@ -16,6 +15,10 @@ pub fn create(center: Vec3f, radius: f64, reflectance: Reflectance) -> Sphere {
         center,
         radius_square: radius * radius,
         reflectance,
+        bounding_box: BoundingBox {
+            min: center - Vec3f::ones().scaled(radius),
+            max: center + Vec3f::ones().scaled(radius),
+        },
     }
 }
 
@@ -55,5 +58,9 @@ impl Shape for Sphere {
             normal: (intersection_point - self.center).normalized(),
             reflectance: self.reflectance,
         })
+    }
+
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box.clone()
     }
 }

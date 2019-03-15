@@ -10,37 +10,6 @@ use std::path::Path;
 use triangle::*;
 
 #[derive(Clone, Debug)]
-struct BoundingBox {
-    min: Vec3f,
-    max: Vec3f,
-}
-
-impl BoundingBox {
-    fn update(&mut self, vec: Vec3f) {
-        self.min.x = f64::min(self.min.x, vec.x);
-        self.min.y = f64::min(self.min.y, vec.y);
-        self.min.z = f64::min(self.min.z, vec.z);
-
-        self.max.x = f64::max(self.max.x, vec.x);
-        self.max.y = f64::max(self.max.y, vec.y);
-        self.max.z = f64::max(self.max.z, vec.z);
-    }
-
-    fn create(vec: Vec3f) -> BoundingBox {
-        BoundingBox { min: vec, max: vec }
-    }
-
-    fn scale(&self) -> f64 {
-        let diff = (self.max - self.min).abs();
-        diff.max()
-    }
-
-    fn middle(&self) -> Vec3f {
-        (self.max + self.min).scaled(0.5)
-    }
-}
-
-#[derive(Clone, Debug)]
 pub struct Obj {
     model: tobj::Model, // Model holds a mesh definition and a name
     material: Option<tobj::Material>,
@@ -102,7 +71,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                 .into_iter()
                 .map(|t| {
                     // Collect all the vertices for this face
-                    let mut vertices: Vec<Vec3f> = (0..3)
+                    let vertices: Vec<Vec3f> = (0..3)
                         .into_iter()
                         .map(|v| {
                             let i_v = model.mesh.indices[t * 3 + v] as usize;
@@ -116,22 +85,15 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                         })
                         .collect();
 
-                    // Scale all the vertices
-                    if bounding_box.scale() > 0. {
-                        for mut v in &mut vertices {
-                            v.add(-bounding_box.middle());
-                        }
-
-                        let s = 1. / bounding_box.scale();
-                        for v in &mut vertices {
-                            v.scale(s);
-                        }
-                    }
-
                     // Return a triangle out of it
                     Triangle::create(vertices)
                 })
                 .collect();
+
+            println![
+                "Object bounding box: {} - {}",
+                bounding_box.min, bounding_box.max
+            ];
 
             // Get arbitrary reflectance values, continuous
             let reflectances: Vec<Reflectance> = (0..n_triangles)
@@ -159,6 +121,37 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
         .collect();
 
     Some(objects)
+}
+
+pub fn autoscale(objects: &mut Vec<Obj>) {
+    // Get the scale of all objects
+    let mut bb = BoundingBox::create(Vec3f::zero());
+
+    for o in &(*objects) {
+        bb.update(o.bounding_box().min);
+        bb.update(o.bounding_box().max);
+    }
+
+    println![
+        "Global bounding box: {} - {} - scale {:.2}",
+        bb.min,
+        bb.max,
+        bb.scale()
+    ];
+
+    // Scale all the vertices
+    if bb.scale() > 0. {
+        for mut o in &mut (*objects) {
+            for mut v in &mut o.triangles {
+                v.offset(-bb.middle());
+            }
+
+            // let s = 0.5; // 1. / bb.scale();
+            // for v in &mut o.triangles {
+            //     v.scale(s);
+            // }
+        }
+    }
 }
 
 impl Shape for Obj {
@@ -192,6 +185,10 @@ impl Shape for Obj {
             return Some(intersection_final);
         }
         None
+    }
+
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box.clone()
     }
 }
 

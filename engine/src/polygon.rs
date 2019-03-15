@@ -1,7 +1,5 @@
 use geometry::Vec3f;
-use shapes::Intersection;
-use shapes::Reflectance;
-use shapes::Shape;
+use shapes::*;
 
 // A planar polygon
 #[derive(Clone, Debug)]
@@ -10,6 +8,7 @@ pub struct ConvexPolygon {
     reflectance: Reflectance,
     plane_normal: Vec3f,
     plane_point: Vec3f,
+    bounding_box: BoundingBox,
 }
 
 #[allow(dead_code)]
@@ -21,8 +20,11 @@ impl ConvexPolygon {
         // Pre-compute the plane coefficients
         // - Compute the center of the polygon
         let mut mean = Vec3f::zero();
+        let mut bounding_box = BoundingBox::create(vertices[0]);
+
         for v in &vertices {
             mean += *v;
+            bounding_box.update(*v);
         }
         mean.scale(1. / vertices.len() as f64);
 
@@ -35,6 +37,7 @@ impl ConvexPolygon {
             reflectance,
             plane_normal: edge_1.cross(edge_2).normalized(),
             plane_point: mean,
+            bounding_box,
         }
     }
 
@@ -92,5 +95,9 @@ impl Shape for ConvexPolygon {
             normal: self.plane_normal,
             reflectance: self.reflectance,
         })
+    }
+
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box.clone()
     }
 }

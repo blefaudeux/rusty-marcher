@@ -31,12 +31,19 @@ pub struct Reflectance {
     pub refractive_index: f64,
 }
 
+#[derive(Clone, Debug)]
+pub struct BoundingBox {
+    pub min: Vec3f,
+    pub max: Vec3f,
+}
+
 pub trait Shape {
     // A Shape is able to report an hypothetical intersection.
     // if true the intersect point, normal, and diffuse color
     fn intersect(&self, orig: &Vec3f, dir: &Vec3f) -> Option<Intersection>;
 
-    // Add Bounding box ?
+    // Useful for fast intersect test
+    fn bounding_box(&self) -> BoundingBox;
 }
 
 impl Reflectance {
@@ -50,6 +57,31 @@ impl Reflectance {
             reflection: 0.95,
             refractive_index: 1., // TODO: indices over R,G,B
         }
+    }
+}
+
+impl BoundingBox {
+    pub fn update(&mut self, vec: Vec3f) {
+        self.min.x = self.min.x.min(vec.x);
+        self.min.y = self.min.y.min(vec.y);
+        self.min.z = self.min.z.min(vec.z);
+
+        self.max.x = self.max.x.max(vec.x);
+        self.max.y = self.max.y.max(vec.y);
+        self.max.z = self.max.z.max(vec.z);
+    }
+
+    pub fn create(vec: Vec3f) -> BoundingBox {
+        BoundingBox { min: vec, max: vec }
+    }
+
+    pub fn scale(&self) -> f64 {
+        let diff = (self.max - self.min).abs();
+        diff.max()
+    }
+
+    pub fn middle(&self) -> Vec3f {
+        (self.max + self.min).scaled(0.5)
     }
 }
 
