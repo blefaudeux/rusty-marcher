@@ -33,7 +33,9 @@ impl Vec3f {
     }
 
     pub fn scale(&mut self, s: f64) {
-        scale(self, s);
+        self.x *= s;
+        self.y *= s;
+        self.z *= s;
     }
 
     pub fn abs(&self) -> Vec3f {
@@ -102,21 +104,15 @@ impl Vec3f {
 fn normalize(vec: &mut Vec3f) {
     let norm = dot(*vec, *vec).sqrt();
     if norm > 0. {
-        scale(vec, 1. / norm);
+        vec.scale(1. / norm);
     }
 }
 
 fn normalize_l0(vec: &mut Vec3f) {
     let norm = vec.x.max(vec.y).max(vec.z);
     if norm > 0. {
-        scale(vec, 1. / norm);
+        vec.scale(1. / norm);
     }
-}
-
-fn scale(vec: &mut Vec3f, scale: f64) {
-    vec.x *= scale;
-    vec.y *= scale;
-    vec.z *= scale;
 }
 
 impl Add for Vec3f {
@@ -206,6 +202,15 @@ mod test {
             let mut start_scale = Vec3f::ones();
             start_scale.scale(1.36);
             assert![start_scale.x == 1.36 && start_scale.y == 1.36 && start_scale.z == 1.36];
+        }
+        {
+            let start = Vec3f {
+                x: 1.,
+                y: 2.,
+                z: 3.,
+            };
+            let start_scaled = start.scaled(1.36);
+            assert![start_scaled.x == 1.36 && start_scaled.y == 2.72 && start_scaled.z == 4.08];
         }
     }
 

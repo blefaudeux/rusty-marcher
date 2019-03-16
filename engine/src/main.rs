@@ -14,8 +14,8 @@ use std::env;
 
 fn main() {
     // Allocate our dummy buffer
-    let mut width = 1280;
-    let mut height = 768;
+    let mut width = 640;
+    let mut height = 480;
     let mut filepath = String::from(String::from("../test_data/dodecahedron.obj"));
 
     // Handle command-line arguments
@@ -37,17 +37,17 @@ fn main() {
     // Create renderer and scene
     let ray_marcher = renderer::create_renderer(1.5, &frame);
     let mut scene = scene::Scene::create_default();
+    // scene.shapes.clear(); // Just use the obj we loaded
 
     let payload = obj::load(filepath);
 
-    scene.shapes.clear();
     if let Some(mut objects) = payload {
-        obj::autoscale(&mut objects);
+        obj::autoscale(&mut objects, 10.);
 
         let off = geometry::Vec3f {
             x: 0.,
-            y: 0.,
-            z: -200.,
+            y: 5.,
+            z: -100.,
         };
 
         for mut obj in objects {

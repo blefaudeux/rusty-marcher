@@ -24,7 +24,7 @@ impl ConvexPolygon {
 
         for v in &vertices {
             mean += *v;
-            bounding_box.update(*v);
+            bounding_box.update(v);
         }
         mean.scale(1. / vertices.len() as f64);
 

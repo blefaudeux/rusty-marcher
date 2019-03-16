@@ -22,9 +22,20 @@ pub struct Obj {
 impl Obj {
     pub fn offset(&mut self, off: Vec3f) {
         // Only move the triangles for now, not the mesh object
-        for mut t in &mut self.triangles {
+        for t in &mut self.triangles {
             t.offset(off);
         }
+    }
+
+    pub fn update_bounding_box(&mut self) {
+        let mut bb = BoundingBox::create(self.triangles[0].vertices[0]);
+
+        for t in &mut self.triangles {
+            for v in &t.vertices {
+                bb.update(v);
+            }
+        }
+        self.bounding_box = bb;
     }
 }
 
@@ -80,7 +91,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                                 y: model.mesh.positions[3 * i_v + 1] as f64,
                                 z: model.mesh.positions[3 * i_v + 2] as f64,
                             };
-                            bounding_box.update(vertex);
+                            bounding_box.update(&vertex);
                             vertex
                         })
                         .collect();
@@ -91,8 +102,10 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                 .collect();
 
             println![
-                "Object bounding box: {} - {}",
-                bounding_box.min, bounding_box.max
+                "Object bounding box: {} - {}. scale {}",
+                bounding_box.min,
+                bounding_box.max,
+                bounding_box.scale()
             ];
 
             // Get arbitrary reflectance values, continuous
@@ -123,21 +136,16 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
     Some(objects)
 }
 
-pub fn autoscale(objects: &mut Vec<Obj>) {
+pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
+    assert_ne![desired_scale, 0.];
+
     // Get the scale of all objects
     let mut bb = BoundingBox::create(Vec3f::zero());
 
     for o in &(*objects) {
-        bb.update(o.bounding_box().min);
-        bb.update(o.bounding_box().max);
+        bb.update(&o.bounding_box().min);
+        bb.update(&o.bounding_box().max);
     }
-
-    println![
-        "Global bounding box: {} - {} - scale {:.2}",
-        bb.min,
-        bb.max,
-        bb.scale()
-    ];
 
     // Scale all the vertices
     if bb.scale() > 0. {
@@ -146,11 +154,21 @@ pub fn autoscale(objects: &mut Vec<Obj>) {
                 v.offset(-bb.middle());
             }
 
-            // let s = 0.5; // 1. / bb.scale();
-            // for v in &mut o.triangles {
-            //     v.scale(s);
-            // }
+            let s = desired_scale / bb.scale();
+            for v in &mut o.triangles {
+                v.scale(s);
+            }
         }
+    }
+
+    for mut o in &mut (*objects) {
+        o.update_bounding_box();
+        println![
+            "Object bounding box: {} - {}. scale {}",
+            o.bounding_box().min,
+            o.bounding_box().max,
+            o.bounding_box().scale()
+        ];
     }
 }
 

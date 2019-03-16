@@ -52,7 +52,7 @@ impl Triangle {
 
         // Parallel to the plane
         let dot_product = dir.dot(self.normal);
-        if dot_product == 0. {
+        if dot_product.abs() < 1e-6 {
             return None;
         }
 

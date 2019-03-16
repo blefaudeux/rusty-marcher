@@ -61,7 +61,7 @@ impl Reflectance {
 }
 
 impl BoundingBox {
-    pub fn update(&mut self, vec: Vec3f) {
+    pub fn update(&mut self, vec: &Vec3f) {
         self.min.x = self.min.x.min(vec.x);
         self.min.y = self.min.y.min(vec.y);
         self.min.z = self.min.z.min(vec.z);
@@ -76,8 +76,7 @@ impl BoundingBox {
     }
 
     pub fn scale(&self) -> f64 {
-        let diff = (self.max - self.min).abs();
-        diff.max()
+        (self.max - self.min).abs().max()
     }
 
     pub fn middle(&self) -> Vec3f {
