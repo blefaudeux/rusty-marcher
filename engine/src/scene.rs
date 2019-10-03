@@ -99,7 +99,7 @@ impl Scene {
 
         // Blue sphere
         reflectance.specular = 1.0;
-        reflectance.diffusion = 0.2;
+        reflectance.diffusion = 0.1;
         reflectance.diffuse_color = Vec3f {
             x: 0.,
             y: 0.,
@@ -107,7 +107,7 @@ impl Scene {
         };
         reflectance.is_glass_like = true;
         reflectance.refractive_index = 1.5;
-        reflectance.reflection = 0.3;
+        reflectance.reflection = 0.2;
 
         let sphere_blue = sphere::create(
             Vec3f {

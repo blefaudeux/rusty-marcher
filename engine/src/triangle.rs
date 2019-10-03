@@ -22,6 +22,7 @@ impl Triangle {
         }
     }
 
+    #[allow(dead_code)]
     pub fn scale(&mut self, s: f64) {
         for mut v in &mut self.vertices {
             v.scale(s);

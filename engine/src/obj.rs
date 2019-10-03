@@ -136,6 +136,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
     Some(objects)
 }
 
+#[allow(dead_code)]
 pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
     assert_ne![desired_scale, 0.];
 
@@ -157,6 +158,7 @@ pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
             let s = desired_scale / bb.scale();
             for v in &mut o.triangles {
                 v.scale(s);
+                v.offset(bb.middle());
             }
         }
     }

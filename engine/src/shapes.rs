@@ -79,6 +79,7 @@ impl BoundingBox {
         (self.max - self.min).abs().max()
     }
 
+    #[allow(dead_code)]
     pub fn middle(&self) -> Vec3f {
         (self.max + self.min).scaled(0.5)
     }

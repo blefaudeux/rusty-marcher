@@ -12,6 +12,12 @@ mod triangle;
 
 use std::env;
 
+fn help() {
+    println!["Usage:"];
+    println!["renderer (path to obj) (width) (height)"];
+    println!["Using default settings\n"];
+}
+
 fn main() {
     // Allocate our dummy buffer
     let mut width = 640;
@@ -20,16 +26,29 @@ fn main() {
 
     // Handle command-line arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        println!["Usage:"];
-        println!["renderer (path to obj) (width) (height)"];
-        println!["Using default settings\n"];
+    if args.len() < 4 {
+        help();
     } else {
-        filepath = args[0].clone();
+        filepath = args[1].clone();
+        println!["Filepath: {}", filepath];
 
-        // Ok to panic if not parsable, nothing to do
-        width = args[1].parse::<usize>().unwrap();
-        height = args[2].parse::<usize>().unwrap();
+        width = match args[2].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!("error: second argument not an integer");
+                help();
+                return;
+            }
+        };
+
+        height = match args[3].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!("error: second argument not an integer");
+                help();
+                return;
+            }
+        };
     }
 
     let mut frame = framebuffer::create_frame_buffer(width, height);
@@ -41,13 +60,13 @@ fn main() {
 
     let payload = obj::load(filepath);
 
-    if let Some(mut objects) = payload {
-        obj::autoscale(&mut objects, 10.);
+    if let Some(objects) = payload {
+        // obj::autoscale(&mut objects, 10.);
 
         let off = geometry::Vec3f {
             x: 0.,
-            y: 5.,
-            z: -100.,
+            y: 0.,
+            z: -500.,
         };
 
         for mut obj in objects {
