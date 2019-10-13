@@ -22,7 +22,7 @@ fn main() {
     // Allocate our dummy buffer
     let mut width = 640;
     let mut height = 480;
-    let mut filepath = String::from(String::from("../test_data/dodecahedron.obj"));
+    let mut filepath = String::from(String::from("../test_data/cornell_box.obj"));
 
     // Handle command-line arguments
     let args: Vec<String> = env::args().collect();
@@ -56,12 +56,12 @@ fn main() {
     // Create renderer and scene
     let ray_marcher = renderer::create_renderer(1.5, &frame);
     let mut scene = scene::Scene::create_default();
-    // scene.shapes.clear(); // Just use the obj we loaded
+    scene.shapes.clear(); // Just use the obj we loaded
 
     let payload = obj::load(filepath);
 
-    if let Some(objects) = payload {
-        // obj::autoscale(&mut objects, 10.);
+    if let Some(mut objects) = payload {
+        obj::autoscale(&mut objects, 10.);
 
         let off = geometry::Vec3f {
             x: 0.,

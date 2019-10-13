@@ -155,11 +155,11 @@ pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
                 v.offset(-bb.middle());
             }
 
-            let s = desired_scale / bb.scale();
-            for v in &mut o.triangles {
-                v.scale(s);
-                v.offset(bb.middle());
-            }
+            // let s = desired_scale / bb.scale();
+            // for v in &mut o.triangles {
+            //     v.scale(s);
+            //     // v.offset(bb.middle());
+            // }
         }
     }
 
