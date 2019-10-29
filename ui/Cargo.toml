@@ -5,5 +5,6 @@ authors = ["benjamin.lefaudeux@gmail.com"]
 edition = "2018"
 
 [dependencies]
-azul = { git = "https://github.com/maps4print/azul" }
-gleam = "*"
+gtk = "^0.6.0"
+relm = "^0.16.0"
+relm-derive = "^0.16.0"
