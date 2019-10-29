@@ -1,0 +1,9 @@
+[package]
+name = "ui"
+version = "0.1.0"
+authors = ["benjamin.lefaudeux@gmail.com"]
+edition = "2018"
+
+[dependencies]
+azul = { git = "https://github.com/maps4print/azul" }
+gleam = "*"
