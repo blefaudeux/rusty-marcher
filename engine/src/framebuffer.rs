@@ -31,6 +31,12 @@ impl FrameBuffer {
         file.write_all(format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
 
         // Write line by line, probably not needed thanks to buffering, but anyway..
+        let write_buffer = self.to_vec();
+        file.write_all(&write_buffer)?;
+        Ok(0)
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
         let mut write_buffer = vec![0 as u8; self.width * self.height * 3];
         let mut i_ = 0;
         for i in 0..self.height {
@@ -43,8 +49,8 @@ impl FrameBuffer {
                 i_ += 3;
             }
         }
-        file.write_all(&write_buffer)?;
-        Ok(0)
+
+        return write_buffer;
     }
 
     pub fn normalize(&mut self) {
