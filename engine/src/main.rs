@@ -117,12 +117,17 @@ enum Msg {
 
 fn framebuffer_to_pixbuf(fb: &framebuffer::FrameBuffer) -> Pixbuf {
     // Transform the FrameBuffer into a vector of u8
-    let loader = PixbufLoader::new();
-    loader.loader_write(&fb.to_vec()[..]).unwrap();
-    loader.close().unwrap();
+    let _u8buff = fb.to_vec().to_owned();
 
-    // Return the GTK compliant Pixbuf
-    loader.get_pixbuf().unwrap()
+    // This should work, but falls flat on its face
+    // let loader = PixbufLoader::new();
+    // loader.loader_write(&u8buff).unwrap();
+    // return loader.get_pixbuf().unwrap();
+    unsafe {
+        // This should not work, but kind of works..
+        let pixbuf = Pixbuf::new(0, false, 8, fb.width as i32, fb.height as i32).unwrap();
+        return pixbuf;
+    }
 }
 
 // Create the structure that holds the widgets used in the view.
