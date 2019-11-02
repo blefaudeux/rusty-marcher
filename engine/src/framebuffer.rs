@@ -22,6 +22,7 @@ pub fn create_frame_buffer(width: usize, height: usize) -> FrameBuffer {
 }
 
 impl FrameBuffer {
+    #[allow(dead_code)]
     pub fn write_ppm(&self, filename: &str) -> std::io::Result<usize> {
         // Open the file stream and dump
         let mut file = File::create(filename)?;
@@ -53,6 +54,7 @@ impl FrameBuffer {
         return write_buffer;
     }
 
+    #[allow(dead_code)]
     pub fn normalize(&mut self) {
         let mut max = geometry::Vec3f::zero();
 

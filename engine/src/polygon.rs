@@ -43,7 +43,7 @@ impl ConvexPolygon {
 
     pub fn offset(&mut self, off: Vec3f) {
         self.plane_point += off;
-        for mut v in &mut self.vertices {
+        for v in &mut self.vertices {
             *v += off;
         }
     }

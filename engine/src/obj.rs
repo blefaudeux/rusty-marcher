@@ -39,6 +39,7 @@ impl Obj {
     }
 }
 
+#[allow(dead_code)]
 pub fn load(path: String) -> Option<Vec<Obj>> {
     let loaded = tobj::load_obj(&Path::new(&path));
     if loaded.is_err() {
@@ -150,8 +151,8 @@ pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
 
     // Scale all the vertices
     if bb.scale() > 0. {
-        for mut o in &mut (*objects) {
-            for mut v in &mut o.triangles {
+        for o in &mut (*objects) {
+            for v in &mut o.triangles {
                 v.offset(-bb.middle());
             }
 
@@ -163,7 +164,7 @@ pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
         }
     }
 
-    for mut o in &mut (*objects) {
+    for o in &mut (*objects) {
         o.update_bounding_box();
         println![
             "Object bounding box: {} - {}. scale {}",
@@ -223,5 +224,4 @@ mod test {
         let test = load(String::from("../test_data/cornell_box.obj"));
         assert![test.is_some()];
     }
-
 }

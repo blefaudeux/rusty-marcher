@@ -5,9 +5,8 @@ authors = ["Benjamin Lefaudeux <benjamin.lefaudeux@gmail.com>"]
 
 [dependencies]
 rayon = "*"
-tobj = "0.1.6"
-futures-glib = "0.3.2"
-gtk = "^0.3.0"
-gdk-pixbuf = "^0.3.0"
-relm = "^0.11.0"
-relm-derive = "^0.11.0"
+tobj = "0.1.11"
+gdk-pixbuf = "^0.6.0"
+gtk = "^0.6.0"
+relm = "^0.16.0"
+relm-derive = "^0.16.0"

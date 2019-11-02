@@ -14,17 +14,18 @@ fn inside(a: Vec3f, p1: Vec3f, p2: Vec3f) -> bool {
     (p1 - a).cross(p2 - a).z > 0.
 }
 
+#[allow(dead_code)]
 impl Triangle {
     pub fn offset(&mut self, off: Vec3f) {
         self.center += off;
-        for mut v in &mut self.vertices {
+        for v in &mut self.vertices {
             *v += off;
         }
     }
 
     #[allow(dead_code)]
     pub fn scale(&mut self, s: f64) {
-        for mut v in &mut self.vertices {
+        for v in &mut self.vertices {
             v.scale(s);
         }
     }

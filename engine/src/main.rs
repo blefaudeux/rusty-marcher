@@ -4,6 +4,9 @@ extern crate relm;
 #[macro_use]
 extern crate relm_derive;
 
+extern crate gdk_pixbuf;
+extern crate gtk;
+
 mod framebuffer;
 mod geometry;
 mod lights;
@@ -16,13 +19,13 @@ mod shapes;
 mod sphere;
 mod triangle;
 
-// use std::env;
-
-// fn help() {
-//     println!["Usage:"];
-//     println!["renderer (path to obj) (width) (height)"];
-//     println!["Using default settings\n"];
-// }
+use gdk_pixbuf::Pixbuf;
+use gtk::Orientation::Vertical;
+use gtk::{
+    Button, ButtonExt, ContainerExt, Image, ImageExt, Inhibit, Label, LabelExt, WidgetExt, Window,
+    WindowType,
+};
+use relm::{Relm, Update, Widget};
 
 // fn not_main() {
 //     // Allocate our dummy buffer
@@ -89,20 +92,6 @@ mod triangle;
 //     frame.write_ppm("out.ppm").unwrap();
 // }
 
-extern crate futures_glib;
-extern crate gdk_pixbuf;
-extern crate gtk;
-
-use futures_glib::Timeout;
-use gdk_pixbuf::{Pixbuf, PixbufLoader};
-use gtk::Orientation::Vertical;
-use gtk::{
-    Button, ButtonExt, ContainerExt, Image, ImageExt, Inhibit, Label, LabelExt, WidgetExt, Window,
-    WindowType,
-};
-use relm::{Relm, Update, Widget};
-use std::time::Duration;
-
 struct Model {
     relm: Relm<Win>,
     started_rendering: Option<renderer::Renderer>,
@@ -116,18 +105,16 @@ enum Msg {
 }
 
 fn framebuffer_to_pixbuf(fb: &framebuffer::FrameBuffer) -> Pixbuf {
-    // Transform the FrameBuffer into a vector of u8
-    let _u8buff = fb.to_vec().to_owned();
-
-    // This should work, but falls flat on its face
-    // let loader = PixbufLoader::new();
-    // loader.loader_write(&u8buff).unwrap();
-    // return loader.get_pixbuf().unwrap();
-    unsafe {
-        // This should not work, but kind of works..
-        let pixbuf = Pixbuf::new(0, false, 8, fb.width as i32, fb.height as i32).unwrap();
-        return pixbuf;
-    }
+    let _u8buff = fb.to_vec();
+    return Pixbuf::new_from_mut_slice(
+        _u8buff,
+        gdk_pixbuf::Colorspace::Rgb,
+        false,
+        8,
+        fb.width as i32,
+        fb.height as i32,
+        fb.width as i32,
+    );
 }
 
 // Create the structure that holds the widgets used in the view.
@@ -161,13 +148,11 @@ impl Update for Win {
                     self.clear_renderer();
                 } else {
                     self.new_renderer();
-                    self.set_msg_timeout(10, Msg::UpdateRaytraceImage);
                 }
             }
             Msg::UpdateRaytraceImage(()) => {
                 if self.model.started_rendering.is_some() {
                     self.update_raytrace_image();
-                    self.set_msg_timeout(10, Msg::UpdateRaytraceImage);
                 }
             }
             Msg::Quit => gtk::main_quit(),
@@ -229,12 +214,11 @@ impl Widget for Win {
 }
 
 impl Win {
-    fn set_msg_timeout<CALLBACK>(&mut self, millis: u64, callback: CALLBACK)
+    fn set_msg<CALLBACK>(&mut self, callback: CALLBACK)
     where
         CALLBACK: Fn(()) -> Msg + 'static,
     {
-        let stream = Timeout::new(Duration::from_millis(millis));
-        self.model.relm.connect_exec_ignore_err(stream, callback);
+        // self.model.relm.connect(callback);
     }
 
     fn update_raytrace_image(&mut self) {
@@ -244,9 +228,17 @@ impl Win {
             renderer.render(&mut self.fb, &scene::Scene::create_default());
         }
 
-        // Copy back the result
+        // Copy back the result in a gdk::pixbuff
         let image = &self.image;
-        let pixbuf = framebuffer_to_pixbuf(&self.fb);
+        let pixbuf = Pixbuf::new_from_mut_slice(
+            self.fb.to_vec(),
+            gdk_pixbuf::Colorspace::Rgb,
+            false,
+            8,
+            self.fb.width as i32,
+            self.fb.height as i32,
+            self.fb.width as i32,
+        );
         image.set_from_pixbuf(&pixbuf);
         while gtk::events_pending() {
             gtk::main_iteration_do(true);
