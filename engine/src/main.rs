@@ -101,20 +101,7 @@ struct Model {
 enum Msg {
     ToggleRendering,
     Quit,
-    UpdateRaytraceImage(()),
-}
-
-fn framebuffer_to_pixbuf(fb: &framebuffer::FrameBuffer) -> Pixbuf {
-    let _u8buff = fb.to_vec();
-    return Pixbuf::new_from_mut_slice(
-        _u8buff,
-        gdk_pixbuf::Colorspace::Rgb,
-        false,
-        8,
-        fb.width as i32,
-        fb.height as i32,
-        fb.width as i32,
-    );
+    ToggleSaveToFile,
 }
 
 // Create the structure that holds the widgets used in the view.
@@ -148,12 +135,11 @@ impl Update for Win {
                     self.clear_renderer();
                 } else {
                     self.new_renderer();
-                }
-            }
-            Msg::UpdateRaytraceImage(()) => {
-                if self.model.started_rendering.is_some() {
                     self.update_raytrace_image();
                 }
+            }
+            Msg::ToggleSaveToFile => {
+                self.save_to_file();
             }
             Msg::Quit => gtk::main_quit(),
         }
@@ -173,11 +159,14 @@ impl Widget for Win {
         // Create the view using the normal GTK+ method calls.
         let vbox = gtk::Box::new(Vertical, 0);
 
-        let state_label = Label::new("wait to toggle camera");
+        let state_label = Label::new(Some("Waiting to create the renderer"));
         vbox.add(&state_label);
 
-        let toggle_camera_button = Button::new_with_label("toggle camera");
-        vbox.add(&toggle_camera_button);
+        let toggle_render = Button::new_with_label("Render !");
+        vbox.add(&toggle_render);
+
+        let toggle_save_to_file = Button::new_with_label("Save to file");
+        vbox.add(&toggle_save_to_file);
 
         let image = Image::new();
         vbox.add(&image);
@@ -192,9 +181,16 @@ impl Widget for Win {
         // Send the message Increment when the button is clicked.
         connect!(
             relm,
-            toggle_camera_button,
+            toggle_render,
             connect_clicked(_),
             Msg::ToggleRendering
+        );
+
+        connect!(
+            relm,
+            toggle_save_to_file,
+            connect_clicked(_),
+            Msg::ToggleSaveToFile
         );
         connect!(
             relm,
@@ -214,13 +210,6 @@ impl Widget for Win {
 }
 
 impl Win {
-    fn set_msg<CALLBACK>(&mut self, callback: CALLBACK)
-    where
-        CALLBACK: Fn(()) -> Msg + 'static,
-    {
-        // self.model.relm.connect(callback);
-    }
-
     fn update_raytrace_image(&mut self) {
         // Kick a new rendering
         if self.model.started_rendering.is_some() {
@@ -230,6 +219,7 @@ impl Win {
 
         // Copy back the result in a gdk::pixbuff
         let image = &self.image;
+
         let pixbuf = Pixbuf::new_from_mut_slice(
             self.fb.to_vec(),
             gdk_pixbuf::Colorspace::Rgb,
@@ -237,11 +227,23 @@ impl Win {
             8,
             self.fb.width as i32,
             self.fb.height as i32,
-            self.fb.width as i32,
+            3 * self.fb.width as i32,
         );
-        image.set_from_pixbuf(&pixbuf);
+
+        image.set_from_pixbuf(Some(&pixbuf));
         while gtk::events_pending() {
             gtk::main_iteration_do(true);
+        }
+    }
+
+    fn save_to_file(&mut self) {
+        if self.model.started_rendering.is_some() {
+            self.fb.normalize();
+            self.fb.write_ppm("out.ppm").unwrap();
+            self.state_label.set_text("Saved rendered file");
+        } else {
+            self.state_label
+                .set_text("Cannot save, please start renderer");
         }
     }
 
