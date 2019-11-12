@@ -22,8 +22,8 @@ mod triangle;
 use gdk_pixbuf::Pixbuf;
 use gtk::Orientation::Vertical;
 use gtk::{
-    Button, ButtonExt, ContainerExt, Image, ImageExt, Inhibit, Label, LabelExt, WidgetExt, Window,
-    WindowType,
+    Button, ButtonExt, ContainerExt, Image, ImageExt, Inhibit, Label, LabelExt, SpinButton,
+    WidgetExt, Window, WindowType,
 };
 use relm::{Relm, Update, Widget};
 
@@ -32,33 +32,6 @@ use relm::{Relm, Update, Widget};
 //     let mut width = 640;
 //     let mut height = 480;
 //     let mut filepath = String::from(String::from("../test_data/cornell_box.obj"));
-
-//     // Handle command-line arguments
-//     let args: Vec<String> = env::args().collect();
-//     if args.len() < 4 {
-//         help();
-//     } else {
-//         filepath = args[1].clone();
-//         println!["Filepath: {}", filepath];
-
-//         width = match args[2].parse() {
-//             Ok(n) => n,
-//             Err(_) => {
-//                 eprintln!("error: second argument not an integer");
-//                 help();
-//                 return;
-//             }
-//         };
-
-//         height = match args[3].parse() {
-//             Ok(n) => n,
-//             Err(_) => {
-//                 eprintln!("error: second argument not an integer");
-//                 help();
-//                 return;
-//             }
-//         };
-//     }
 
 //     let mut frame = framebuffer::create_frame_buffer(width, height);
 
