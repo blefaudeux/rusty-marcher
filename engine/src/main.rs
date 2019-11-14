@@ -20,10 +20,12 @@ mod sphere;
 mod triangle;
 
 use gdk_pixbuf::Pixbuf;
+use gtk::FileChooserDialog;
+use gtk::Orientation::Horizontal;
 use gtk::Orientation::Vertical;
 use gtk::{
-    Button, ButtonExt, ContainerExt, Image, ImageExt, Inhibit, Label, LabelExt, SpinButton,
-    WidgetExt, Window, WindowType,
+    Button, ButtonExt, ContainerExt, FileChooserAction, Image, ImageExt, Inhibit, Label, LabelExt,
+    ResponseType, WidgetExt, Window, WindowType,
 };
 use relm::{Relm, Update, Widget};
 
@@ -75,6 +77,7 @@ enum Msg {
     ToggleRendering,
     Quit,
     ToggleSaveToFile,
+    ToggleOpenFile,
 }
 
 // Create the structure that holds the widgets used in the view.
@@ -115,6 +118,23 @@ impl Update for Win {
                 self.save_to_file();
             }
             Msg::Quit => gtk::main_quit(),
+            Msg::ToggleOpenFile => {
+                let toggle_open_file = FileChooserDialog::with_buttons::<Window>(
+                    Some("Open .obj file"),
+                    None,
+                    FileChooserAction::Open,
+                    &[
+                        ("_Cancel", ResponseType::Cancel),
+                        ("_Open", ResponseType::Accept),
+                    ],
+                );
+
+                let window = Window::new(WindowType::Toplevel);
+                window.add(&toggle_open_file);
+                window.show_all();
+
+                // hbox.add(&toggle_open_file);
+            }
         }
     }
 }
@@ -131,19 +151,28 @@ impl Widget for Win {
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         // Create the view using the normal GTK+ method calls.
         let vbox = gtk::Box::new(Vertical, 0);
+        let hbox = gtk::Box::new(Horizontal, 0);
 
+        // - toolbar
         let state_label = Label::new(Some("Waiting to create the renderer"));
         vbox.add(&state_label);
 
-        let toggle_render = Button::new_with_label("Render !");
-        vbox.add(&toggle_render);
-
         let toggle_save_to_file = Button::new_with_label("Save to file");
-        vbox.add(&toggle_save_to_file);
+        hbox.add(&toggle_save_to_file);
 
+        let toggle_render = Button::new_with_label("Render !");
+        hbox.add(&toggle_render);
+
+        let toggle_open_file = Button::new_with_label("Open .obj file");
+        hbox.add(&toggle_open_file);
+
+        vbox.add(&hbox);
+
+        // Actual display view
         let image = Image::new();
         vbox.add(&image);
 
+        // All encompassing window
         let window = Window::new(WindowType::Toplevel);
         window.add(&vbox);
         window.show_all();
@@ -161,10 +190,18 @@ impl Widget for Win {
 
         connect!(
             relm,
+            toggle_open_file,
+            connect_clicked(_),
+            Msg::ToggleOpenFile
+        );
+
+        connect!(
+            relm,
             toggle_save_to_file,
             connect_clicked(_),
             Msg::ToggleSaveToFile
         );
+
         connect!(
             relm,
             window,
