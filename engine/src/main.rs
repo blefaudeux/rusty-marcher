@@ -20,13 +20,7 @@ mod sphere;
 mod triangle;
 
 use gdk_pixbuf::Pixbuf;
-use gtk::FileChooserDialog;
-use gtk::Orientation::Horizontal;
-use gtk::Orientation::Vertical;
-use gtk::{
-    Button, ButtonExt, ContainerExt, FileChooserAction, Image, ImageExt, Inhibit, Label, LabelExt,
-    ResponseType, WidgetExt, Window, WindowType,
-};
+use gtk::*;
 use relm::{Relm, Update, Widget};
 
 // fn not_main() {
@@ -87,6 +81,7 @@ struct Win {
     model: Model,
     window: Window,
     fb: framebuffer::FrameBuffer,
+    show_open_file: bool,
 }
 
 impl Update for Win {
@@ -119,9 +114,10 @@ impl Update for Win {
             }
             Msg::Quit => gtk::main_quit(),
             Msg::ToggleOpenFile => {
-                let toggle_open_file = FileChooserDialog::with_buttons::<Window>(
+                // Open file dialog
+                let open_file_dialog = FileChooserDialog::with_buttons(
                     Some("Open .obj file"),
-                    None,
+                    Some(&self.window),
                     FileChooserAction::Open,
                     &[
                         ("_Cancel", ResponseType::Cancel),
@@ -129,11 +125,20 @@ impl Update for Win {
                     ],
                 );
 
-                let window = Window::new(WindowType::Toplevel);
-                window.add(&toggle_open_file);
-                window.show_all();
-
-                // hbox.add(&toggle_open_file);
+                // Filter: we just want .obj files
+                let filter = FileFilter::new();
+                filter.add_pattern("*.obj");
+                open_file_dialog.set_filter(&filter);
+                // open_file_dialog.set_current_name("merged.dxf");
+                let button_pressed = open_file_dialog.run();
+                let path = open_file_dialog.get_filename();
+                print!("Got {:?} from FileChooserDialog", path);
+                open_file_dialog.destroy();
+                // if button_pressed == ResponseType::Accept.into() {
+                //     path
+                // } else {
+                //     None
+                // }
             }
         }
     }
@@ -150,12 +155,12 @@ impl Widget for Win {
 
     fn view(relm: &Relm<Self>, model: Self::Model) -> Self {
         // Create the view using the normal GTK+ method calls.
-        let vbox = gtk::Box::new(Vertical, 0);
-        let hbox = gtk::Box::new(Horizontal, 0);
-
-        // - toolbar
+        let vbox = gtk::Box::new(Orientation::Vertical, 0);
         let state_label = Label::new(Some("Waiting to create the renderer"));
         vbox.add(&state_label);
+
+        // - toolbar
+        let hbox = gtk::Box::new(Orientation::Horizontal, 0);
 
         let toggle_save_to_file = Button::new_with_label("Save to file");
         hbox.add(&toggle_save_to_file);
@@ -215,6 +220,7 @@ impl Widget for Win {
             model,
             window: window,
             fb: fb,
+            show_open_file: false,
         }
     }
 }
