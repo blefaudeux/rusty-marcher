@@ -81,7 +81,6 @@ struct Win {
     model: Model,
     window: Window,
     fb: framebuffer::FrameBuffer,
-    show_open_file: bool,
 }
 
 impl Update for Win {
@@ -106,7 +105,7 @@ impl Update for Win {
                     self.clear_renderer();
                 } else {
                     self.new_renderer();
-                    self.update_raytrace_image();
+                    self.update_raytrace_image(&scene::Scene::create_default());
                 }
             }
             Msg::ToggleSaveToFile => {
@@ -129,16 +128,20 @@ impl Update for Win {
                 let filter = FileFilter::new();
                 filter.add_pattern("*.obj");
                 open_file_dialog.set_filter(&filter);
-                // open_file_dialog.set_current_name("merged.dxf");
+
                 let button_pressed = open_file_dialog.run();
                 let path = open_file_dialog.get_filename();
-                print!("Got {:?} from FileChooserDialog", path);
                 open_file_dialog.destroy();
-                // if button_pressed == ResponseType::Accept.into() {
-                //     path
-                // } else {
-                //     None
-                // }
+
+                match path {
+                    Some(filepath) => {
+                        println!("Got {:?} from FileChooserDialog", filepath);
+                        if button_pressed == ResponseType::Accept.into() {
+                            self.open_obj(filepath);
+                        }
+                    }
+                    None => {}
+                }
             }
         }
     }
@@ -220,35 +223,62 @@ impl Widget for Win {
             model,
             window: window,
             fb: fb,
-            show_open_file: false,
         }
     }
 }
 
 impl Win {
-    fn update_raytrace_image(&mut self) {
-        // Kick a new rendering
-        if self.model.started_rendering.is_some() {
-            let renderer = self.model.started_rendering.as_mut().unwrap();
-            renderer.render(&mut self.fb, &scene::Scene::create_default());
+    fn open_obj(&mut self, filepathbuf: std::path::PathBuf) {
+        let path = filepathbuf.into_os_string().into_string();
+        match path {
+            Ok(filepath) => {
+                // Make sure the renderer is started
+                if !self.model.started_rendering.is_some() {
+                    self.new_renderer()
+                }
+
+                // Load the file
+                let objects = obj::load(filepath);
+
+                // Add all the objects to the render scene
+                let mut scene = scene::Scene::new();
+                if let Some(objects) = objects {
+                    for obj in objects {
+                        // `Box` moves storage to the heap
+                        scene.shapes.push(std::boxed::Box::new(obj));
+                    }
+                }
+                println!["Opened file successfuly"];
+
+                // Re-run the raytracer
+                self.update_raytrace_image(&scene);
+            }
+            Err(e) => {
+                println!["Filed opening .obj file. Error {:?}", e];
+            }
         }
+    }
 
-        // Copy back the result in a gdk::pixbuff
-        let image = &self.image;
+    fn update_raytrace_image(&mut self, scene: &scene::Scene) {
+        if self.model.started_rendering.is_some() {
+            let raymarcher = self.model.started_rendering.as_mut().unwrap();
+            raymarcher.render(&mut self.fb, scene);
 
-        let pixbuf = Pixbuf::new_from_mut_slice(
-            self.fb.to_vec(),
-            gdk_pixbuf::Colorspace::Rgb,
-            false,
-            8,
-            self.fb.width as i32,
-            self.fb.height as i32,
-            3 * self.fb.width as i32,
-        );
-
-        image.set_from_pixbuf(Some(&pixbuf));
-        while gtk::events_pending() {
-            gtk::main_iteration_do(true);
+            // Copy back the result in a gdk::pixbuff
+            let image = &self.image;
+            let pixbuf = Pixbuf::new_from_mut_slice(
+                self.fb.to_vec(),
+                gdk_pixbuf::Colorspace::Rgb,
+                false,
+                8,
+                self.fb.width as i32,
+                self.fb.height as i32,
+                3 * self.fb.width as i32,
+            );
+            image.set_from_pixbuf(Some(&pixbuf));
+            while gtk::events_pending() {
+                gtk::main_iteration_do(true);
+            }
         }
     }
 

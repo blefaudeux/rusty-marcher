@@ -11,6 +11,13 @@ pub struct Scene {
 }
 
 impl Scene {
+    pub fn new() -> Scene {
+        // Not sure that this is really needed..
+        Scene {
+            lights: vec![],
+            shapes: vec![],
+        }
+    }
     pub fn create_default() -> Scene {
         let mut reflectance = Reflectance::create_default();
 
