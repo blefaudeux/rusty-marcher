@@ -30,10 +30,12 @@ struct Model {
 
 #[derive(Msg)]
 enum Msg {
-    ToggleRendering,
     Quit,
-    ToggleSaveToFile,
+    ToggleDefaultScene,
     ToggleOpenFile,
+    ToggleMoveBack,
+    ToggleMoveForward,
+    ToggleSaveToFile,
 }
 
 // Create the structure that holds the widgets used in the view.
@@ -43,6 +45,8 @@ struct Win {
     model: Model,
     window: Window,
     fb: framebuffer::FrameBuffer,
+    scene: scene::Scene,
+    scene_offset: geometry::Vec3f,
 }
 
 impl Update for Win {
@@ -62,14 +66,6 @@ impl Update for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Msg::ToggleRendering => {
-                if self.model.started_rendering.is_some() {
-                    self.clear_renderer();
-                } else {
-                    self.new_renderer();
-                    self.update_raytrace_image(&scene::Scene::create_default());
-                }
-            }
             Msg::ToggleSaveToFile => {
                 self.save_to_file();
             }
@@ -105,6 +101,27 @@ impl Update for Win {
                     None => {}
                 }
             }
+            Msg::ToggleDefaultScene => {
+                self.scene = scene::Scene::create_default();
+                self.new_renderer();
+                self.update_raytrace_image();
+            }
+            Msg::ToggleMoveBack => {
+                self.scene_offset.z -= 100 as f64;
+                // FIXME: At that point, the original "Obj" only expose their "Shape" traits
+                // Getting back the Obj type would give back the offset interface
+
+                // for mut shape in self.scene.shapes {
+                //     shape.offset(self.scene_offset);
+                // }
+                self.update_raytrace_image();
+            }
+            Msg::ToggleMoveForward => {
+                self.scene_offset.z += 100 as f64;
+
+                // TODO: Move the scene, same as above
+                self.update_raytrace_image();
+            }
         }
     }
 }
@@ -127,14 +144,20 @@ impl Widget for Win {
         // - toolbar
         let hbox = gtk::Box::new(Orientation::Horizontal, 0);
 
+        let toggle_default = Button::new_with_label("Default scene");
+        hbox.add(&toggle_default);
+
         let toggle_save_to_file = Button::new_with_label("Save to file");
         hbox.add(&toggle_save_to_file);
 
-        let toggle_render = Button::new_with_label("Render !");
-        hbox.add(&toggle_render);
-
         let toggle_open_file = Button::new_with_label("Open .obj file");
         hbox.add(&toggle_open_file);
+
+        let toggle_move_back = Button::new_with_label("Move back");
+        hbox.add(&toggle_move_back);
+
+        let toggle_move_closer = Button::new_with_label("Move closer");
+        hbox.add(&toggle_move_closer);
 
         vbox.add(&hbox);
 
@@ -153,9 +176,9 @@ impl Widget for Win {
         // Send the message Increment when the button is clicked.
         connect!(
             relm,
-            toggle_render,
+            toggle_default,
             connect_clicked(_),
-            Msg::ToggleRendering
+            Msg::ToggleDefaultScene
         );
 
         connect!(
@@ -185,6 +208,12 @@ impl Widget for Win {
             model,
             window: window,
             fb: fb,
+            scene: scene::Scene::create_default(),
+            scene_offset: geometry::Vec3f {
+                x: 0.,
+                y: 0.,
+                z: -500.,
+            },
         }
     }
 }
@@ -204,23 +233,19 @@ impl Win {
 
                 // Add all the objects to the render scene
                 let mut scene = scene::Scene::new();
-                let off = geometry::Vec3f {
-                    x: 0.,
-                    y: 0.,
-                    z: -500.,
-                };
 
-                if let Some(mut objects) = objects {
+                if let Some(objects) = objects {
                     for mut obj in objects {
                         // `Box` moves storage to the heap
-                        obj.offset(off);
+                        obj.offset(self.scene_offset);
                         scene.shapes.push(std::boxed::Box::new(obj));
                     }
                 }
                 println!["Opened file successfuly"];
+                self.scene = scene;
 
                 // Re-run the raytracer
-                self.update_raytrace_image(&scene);
+                self.update_raytrace_image();
             }
             Err(e) => {
                 println!["Filed opening .obj file. Error {:?}", e];
@@ -228,10 +253,11 @@ impl Win {
         }
     }
 
-    fn update_raytrace_image(&mut self, scene: &scene::Scene) {
+    fn update_raytrace_image(&mut self) {
         if self.model.started_rendering.is_some() {
             let raymarcher = self.model.started_rendering.as_mut().unwrap();
-            raymarcher.render(&mut self.fb, scene);
+            self.state_label
+                .set_text(&raymarcher.render(&mut self.fb, &self.scene).to_string());
 
             // Copy back the result in a gdk::pixbuff
             let image = &self.image;
@@ -271,6 +297,7 @@ impl Win {
         self.state_label.set_text("Created new ray tracing engine");
     }
 
+    #[allow(dead_code)]
     fn clear_renderer(&mut self) {
         self.model.started_rendering = None;
         self.state_label.set_text("Cleared renderer");

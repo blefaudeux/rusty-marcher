@@ -33,7 +33,7 @@ pub fn create_renderer(fov: f64, height: f64, width: f64) -> Renderer {
 }
 
 impl Renderer {
-    pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) {
+    pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) -> String {
         let orig = Vec3f::zero();
         let now = Instant::now();
 
@@ -112,13 +112,17 @@ impl Renderer {
             now.elapsed().as_secs() * 1_000 + u64::from(now.elapsed().subsec_nanos()) / 1_000_000;
         let fps = 1000. / ms_render_time as f64;
         let pix_scale = (frame.height * frame.width) as f64 / 1e6;
-        println!(
+
+        let message = format!(
             "Scene rendered in {} ms ({} fps, {:.2} MP/s)",
             ms_render_time,
             fps as u32,
-            fps * pix_scale
+            fps * pix_scale,
         );
+
+        println!("{}", message);
         println!("{} threads used", rayon::current_num_threads());
+        return message;
     }
 
     fn backproject(&self, i: usize, j: usize) -> Vec3f {
