@@ -34,7 +34,7 @@ enum Msg {
     ToggleDefaultScene,
     ToggleOpenFile,
     ToggleMoveBack,
-    ToggleMoveForward,
+    ToggleMoveCloser,
     ToggleSaveToFile,
 }
 
@@ -46,7 +46,6 @@ struct Win {
     window: Window,
     fb: framebuffer::FrameBuffer,
     scene: scene::Scene,
-    scene_offset: geometry::Vec3f,
 }
 
 impl Update for Win {
@@ -107,19 +106,23 @@ impl Update for Win {
                 self.update_raytrace_image();
             }
             Msg::ToggleMoveBack => {
-                self.scene_offset.z -= 100 as f64;
-                // FIXME: At that point, the original "Obj" only expose their "Shape" traits
-                // Getting back the Obj type would give back the offset interface
+                let offset = geometry::Vec3f {
+                    x: 0 as f64,
+                    y: 0 as f64,
+                    z: -20 as f64,
+                };
 
-                // for mut shape in self.scene.shapes {
-                //     shape.offset(self.scene_offset);
-                // }
+                self.scene.offset_camera(offset);
                 self.update_raytrace_image();
             }
-            Msg::ToggleMoveForward => {
-                self.scene_offset.z += 100 as f64;
+            Msg::ToggleMoveCloser => {
+                let offset = geometry::Vec3f {
+                    x: 0 as f64,
+                    y: 0 as f64,
+                    z: 20 as f64,
+                };
 
-                // TODO: Move the scene, same as above
+                self.scene.offset_camera(offset);
                 self.update_raytrace_image();
             }
         }
@@ -197,6 +200,20 @@ impl Widget for Win {
 
         connect!(
             relm,
+            toggle_move_closer,
+            connect_clicked(_),
+            Msg::ToggleMoveCloser
+        );
+
+        connect!(
+            relm,
+            toggle_move_back,
+            connect_clicked(_),
+            Msg::ToggleMoveBack
+        );
+
+        connect!(
+            relm,
             window,
             connect_delete_event(_, _),
             return (Some(Msg::Quit), Inhibit(false))
@@ -209,11 +226,6 @@ impl Widget for Win {
             window: window,
             fb: fb,
             scene: scene::Scene::create_default(),
-            scene_offset: geometry::Vec3f {
-                x: 0.,
-                y: 0.,
-                z: -500.,
-            },
         }
     }
 }
@@ -235,9 +247,16 @@ impl Win {
                 let mut scene = scene::Scene::new();
 
                 if let Some(objects) = objects {
+                    // Default offset, move the scene to the back
+                    let offset = geometry::Vec3f {
+                        x: 0.,
+                        y: 0.,
+                        z: -500.,
+                    };
+
                     for mut obj in objects {
+                        obj.offset(offset);
                         // `Box` moves storage to the heap
-                        obj.offset(self.scene_offset);
                         scene.shapes.push(std::boxed::Box::new(obj));
                     }
                 }

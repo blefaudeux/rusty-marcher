@@ -1,3 +1,4 @@
+use geometry;
 use geometry::Vec3f;
 use lights;
 use polygon;
@@ -8,6 +9,7 @@ use sphere;
 pub struct Scene {
     pub lights: Vec<lights::Light>,
     pub shapes: Vec<Box<dyn Shape + Sync>>,
+    pub camera: geometry::Vec3f,
 }
 
 impl Scene {
@@ -16,7 +18,12 @@ impl Scene {
         Scene {
             lights: vec![],
             shapes: vec![],
+            camera: geometry::Vec3f::zero(),
         }
+    }
+
+    pub fn offset_camera(&mut self, offset: geometry::Vec3f) {
+        self.camera += offset;
     }
     pub fn create_default() -> Scene {
         let mut reflectance = Reflectance::create_default();
@@ -199,6 +206,7 @@ impl Scene {
                 Box::new(triangle),
                 Box::new(square),
             ],
+            camera: geometry::Vec3f::zero(),
         }
     }
 }

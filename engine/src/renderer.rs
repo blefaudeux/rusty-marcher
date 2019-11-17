@@ -34,7 +34,7 @@ pub fn create_renderer(fov: f64, height: f64, width: f64) -> Renderer {
 
 impl Renderer {
     pub fn render(&self, frame: &mut FrameBuffer, scene: &Scene) -> String {
-        let orig = Vec3f::zero();
+        let orig = &scene.camera;
         let now = Instant::now();
 
         let background = Vec3f {
