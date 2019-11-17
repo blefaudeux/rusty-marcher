@@ -23,44 +23,6 @@ use gdk_pixbuf::Pixbuf;
 use gtk::*;
 use relm::{Relm, Update, Widget};
 
-// fn not_main() {
-//     // Allocate our dummy buffer
-//     let mut width = 640;
-//     let mut height = 480;
-//     let mut filepath = String::from(String::from("../test_data/cornell_box.obj"));
-
-//     let mut frame = framebuffer::create_frame_buffer(width, height);
-
-//     // Create renderer and scene
-//     let ray_marcher = renderer::create_renderer(1.5, &frame);
-//     let mut scene = scene::Scene::create_default();
-//     scene.shapes.clear(); // Just use the obj we loaded
-
-//     let payload = obj::load(filepath);
-
-//     if let Some(mut objects) = payload {
-//         obj::autoscale(&mut objects, 10.);
-
-//         let off = geometry::Vec3f {
-//             x: 0.,
-//             y: 0.,
-//             z: -500.,
-//         };
-
-//         for mut obj in objects {
-//             obj.offset(off);
-//             scene.shapes.push(Box::new(obj));
-//         }
-//     }
-
-//     // Back-project rays, save intersection status in the buffer
-//     ray_marcher.render(&mut frame, &scene);
-
-//     // Save to file
-//     frame.normalize();
-//     frame.write_ppm("out.ppm").unwrap();
-// }
-
 struct Model {
     relm: Relm<Win>,
     started_rendering: Option<renderer::Renderer>,
@@ -242,9 +204,16 @@ impl Win {
 
                 // Add all the objects to the render scene
                 let mut scene = scene::Scene::new();
-                if let Some(objects) = objects {
-                    for obj in objects {
+                let off = geometry::Vec3f {
+                    x: 0.,
+                    y: 0.,
+                    z: -500.,
+                };
+
+                if let Some(mut objects) = objects {
+                    for mut obj in objects {
                         // `Box` moves storage to the heap
+                        obj.offset(off);
                         scene.shapes.push(std::boxed::Box::new(obj));
                     }
                 }
@@ -296,7 +265,8 @@ impl Win {
     fn new_renderer(&mut self) {
         // Create the renderer
         // FIXME: the fb is only use for sizing purposes, should be cleaned
-        let ray_marcher = renderer::create_renderer(1.5, &self.fb);
+        let ray_marcher =
+            renderer::create_renderer(1.5, self.fb.height as f64, self.fb.width as f64);
         self.model.started_rendering = Some(ray_marcher);
         self.state_label.set_text("Created new ray tracing engine");
     }

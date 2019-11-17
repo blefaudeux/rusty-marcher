@@ -22,13 +22,13 @@ pub struct Renderer {
     pub ratio: f64,
 }
 
-pub fn create_renderer(fov: f64, frame: &FrameBuffer) -> Renderer {
+pub fn create_renderer(fov: f64, height: f64, width: f64) -> Renderer {
     Renderer {
         fov,
         half_fov: (fov / 2.).tan(),
-        height: frame.height as f64,
-        width: frame.width as f64,
-        ratio: frame.width as f64 / frame.height as f64,
+        height: height,
+        width: width,
+        ratio: width / height,
     }
 }
 
