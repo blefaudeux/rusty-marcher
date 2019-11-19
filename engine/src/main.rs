@@ -28,13 +28,17 @@ struct Model {
     started_rendering: Option<renderer::Renderer>,
 }
 
-#[derive(Msg)]
+#[derive(Msg, Clone, Copy)]
 enum Msg {
     Quit,
     ToggleDefaultScene,
     ToggleOpenFile,
     ToggleMoveBack,
     ToggleMoveCloser,
+    ToggleMoveLeft,
+    ToggleMoveRight,
+    ToggleMoveUp,
+    ToggleMoveDown,
     ToggleSaveToFile,
 }
 
@@ -64,6 +68,11 @@ impl Update for Win {
     }
 
     fn update(&mut self, event: Msg) {
+        let mut update_camera = |offset: geometry::Vec3f| {
+            self.scene.offset_camera(offset);
+            self.update_raytrace_image();
+        };
+
         match event {
             Msg::ToggleSaveToFile => {
                 self.save_to_file();
@@ -107,23 +116,51 @@ impl Update for Win {
             }
             Msg::ToggleMoveBack => {
                 let offset = geometry::Vec3f {
-                    x: 0 as f64,
-                    y: 0 as f64,
-                    z: -20 as f64,
+                    x: 0.0,
+                    y: 0.0,
+                    z: 20.0,
                 };
-
-                self.scene.offset_camera(offset);
-                self.update_raytrace_image();
+                update_camera(offset);
             }
             Msg::ToggleMoveCloser => {
                 let offset = geometry::Vec3f {
-                    x: 0 as f64,
-                    y: 0 as f64,
-                    z: 20 as f64,
+                    x: 0.0,
+                    y: 0.0,
+                    z: -20.0,
                 };
-
-                self.scene.offset_camera(offset);
-                self.update_raytrace_image();
+                update_camera(offset);
+            }
+            Msg::ToggleMoveLeft => {
+                let offset = geometry::Vec3f {
+                    x: -5.0,
+                    y: 0.0,
+                    z: 0.0,
+                };
+                update_camera(offset);
+            }
+            Msg::ToggleMoveRight => {
+                let offset = geometry::Vec3f {
+                    x: 5.0,
+                    y: 0.0,
+                    z: 0.0,
+                };
+                update_camera(offset);
+            }
+            Msg::ToggleMoveUp => {
+                let offset = geometry::Vec3f {
+                    x: 0.0,
+                    y: 5.0,
+                    z: 0.0,
+                };
+                update_camera(offset);
+            }
+            Msg::ToggleMoveDown => {
+                let offset = geometry::Vec3f {
+                    x: 0.0,
+                    y: -5.0,
+                    z: 0.0,
+                };
+                update_camera(offset);
             }
         }
     }
@@ -147,21 +184,23 @@ impl Widget for Win {
         // - toolbar
         let hbox = gtk::Box::new(Orientation::Horizontal, 0);
 
-        let toggle_default = Button::new_with_label("Default scene");
-        hbox.add(&toggle_default);
+        // -- quick lambda to automate button declaration and binding
+        let add_button = |container: &gtk::Box, label: &str, event: Msg| {
+            let toggle = Button::new_with_label(label);
+            container.add(&toggle);
+            connect!(relm, toggle, connect_clicked(_), event);
+        };
+        // -- add all the buttons we're interested in
+        add_button(&hbox, "Default scene", Msg::ToggleDefaultScene);
+        add_button(&hbox, "Save to file", Msg::ToggleSaveToFile);
+        add_button(&hbox, "Open file", Msg::ToggleOpenFile);
 
-        let toggle_save_to_file = Button::new_with_label("Save to file");
-        hbox.add(&toggle_save_to_file);
-
-        let toggle_open_file = Button::new_with_label("Open .obj file");
-        hbox.add(&toggle_open_file);
-
-        let toggle_move_back = Button::new_with_label("Move back");
-        hbox.add(&toggle_move_back);
-
-        let toggle_move_closer = Button::new_with_label("Move closer");
-        hbox.add(&toggle_move_closer);
-
+        add_button(&hbox, "Back", Msg::ToggleMoveBack);
+        add_button(&hbox, "Closer", Msg::ToggleMoveCloser);
+        add_button(&hbox, "Left", Msg::ToggleMoveLeft);
+        add_button(&hbox, "Right", Msg::ToggleMoveRight);
+        add_button(&hbox, "Up", Msg::ToggleMoveUp);
+        add_button(&hbox, "Down", Msg::ToggleMoveDown);
         vbox.add(&hbox);
 
         // Actual display view
@@ -174,43 +213,7 @@ impl Widget for Win {
         window.show_all();
 
         // Create the raytrace framebuffer
-        let fb = framebuffer::create_frame_buffer(800, 600);
-
-        // Send the message Increment when the button is clicked.
-        connect!(
-            relm,
-            toggle_default,
-            connect_clicked(_),
-            Msg::ToggleDefaultScene
-        );
-
-        connect!(
-            relm,
-            toggle_open_file,
-            connect_clicked(_),
-            Msg::ToggleOpenFile
-        );
-
-        connect!(
-            relm,
-            toggle_save_to_file,
-            connect_clicked(_),
-            Msg::ToggleSaveToFile
-        );
-
-        connect!(
-            relm,
-            toggle_move_closer,
-            connect_clicked(_),
-            Msg::ToggleMoveCloser
-        );
-
-        connect!(
-            relm,
-            toggle_move_back,
-            connect_clicked(_),
-            Msg::ToggleMoveBack
-        );
+        let fb = framebuffer::create_frame_buffer(1280, 800);
 
         connect!(
             relm,
