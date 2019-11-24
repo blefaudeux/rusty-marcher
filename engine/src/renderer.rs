@@ -165,11 +165,11 @@ fn direct_lighting(
     for light in lights {
         let light_dir = (light.position - intersection.point).normalized();
 
-        if light_dir.dot(intersection.normal) < 0. {
-            intersect_orig = intersection.point - intersection.normal.scaled(1e-3);
+        intersect_orig = if light_dir.dot(intersection.normal) < 0. {
+            intersection.point - intersection.normal.scaled(1e-3)
         } else {
-            intersect_orig = intersection.point + intersection.normal.scaled(1e-3);
-        }
+            intersection.point + intersection.normal.scaled(1e-3)
+        };
 
         if intersect_shape_set(&intersect_orig, &light_dir, &shapes[..]) {
             // Cast shadow, this light is not visible from this point of view

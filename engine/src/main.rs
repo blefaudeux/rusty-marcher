@@ -4,6 +4,7 @@ extern crate relm;
 #[macro_use]
 extern crate relm_derive;
 
+extern crate gdk;
 extern crate gdk_pixbuf;
 extern crate gtk;
 
@@ -20,9 +21,11 @@ mod sphere;
 mod triangle;
 
 use gdk_pixbuf::Pixbuf;
+use gtk::prelude::*;
 use gtk::*;
 use relm::{Relm, Update, Widget};
 
+#[allow(dead_code)]
 struct Model {
     relm: Relm<Win>,
     started_rendering: Option<renderer::Renderer>,
@@ -40,6 +43,7 @@ enum Msg {
     ToggleMoveUp,
     ToggleMoveDown,
     ToggleSaveToFile,
+    Sink,
 }
 
 // Create the structure that holds the widgets used in the view.
@@ -109,6 +113,7 @@ impl Update for Win {
                     None => {}
                 }
             }
+            Msg::Sink => {}
             Msg::ToggleDefaultScene => {
                 self.scene = scene::Scene::create_default();
                 self.new_renderer();
@@ -118,7 +123,7 @@ impl Update for Win {
                 let offset = geometry::Vec3f {
                     x: 0.0,
                     y: 0.0,
-                    z: 20.0,
+                    z: 5.0,
                 };
                 update_camera(offset);
             }
@@ -126,7 +131,7 @@ impl Update for Win {
                 let offset = geometry::Vec3f {
                     x: 0.0,
                     y: 0.0,
-                    z: -20.0,
+                    z: -5.0,
                 };
                 update_camera(offset);
             }
@@ -195,8 +200,6 @@ impl Widget for Win {
         add_button(&hbox, "Save to file", Msg::ToggleSaveToFile);
         add_button(&hbox, "Open file", Msg::ToggleOpenFile);
 
-        add_button(&hbox, "Back", Msg::ToggleMoveBack);
-        add_button(&hbox, "Closer", Msg::ToggleMoveCloser);
         add_button(&hbox, "Left", Msg::ToggleMoveLeft);
         add_button(&hbox, "Right", Msg::ToggleMoveRight);
         add_button(&hbox, "Up", Msg::ToggleMoveUp);
@@ -211,6 +214,25 @@ impl Widget for Win {
         let window = Window::new(WindowType::Toplevel);
         window.add(&vbox);
         window.show_all();
+
+        // Grab the mouse events
+        window.add_events(gdk::EventMask::SCROLL_MASK);
+
+        connect!(
+            relm,
+            window,
+            connect_scroll_event(_, evt),
+            return (
+                if evt.get_direction() == gdk::ScrollDirection::Up {
+                    Msg::ToggleMoveBack
+                } else if evt.get_direction() == gdk::ScrollDirection::Down {
+                    Msg::ToggleMoveCloser
+                } else {
+                    Msg::Sink
+                },
+                Inhibit(false)
+            )
+        );
 
         // Create the raytrace framebuffer
         let fb = framebuffer::create_frame_buffer(1280, 800);
@@ -263,6 +285,33 @@ impl Win {
                         scene.shapes.push(std::boxed::Box::new(obj));
                     }
                 }
+
+                // Add an arbitrary set of lights
+                // FIXME: Need something a tiny bit better
+                scene.lights.push(lights::create_light(
+                    geometry::Vec3f {
+                        x: 0.,
+                        y: 0.,
+                        z: 0.,
+                    },
+                    geometry::Vec3f::ones(), // white light
+                    1.,
+                ));
+
+                scene.lights.push(lights::create_light(
+                    geometry::Vec3f {
+                        x: 20.,
+                        y: 20.,
+                        z: 20.,
+                    },
+                    geometry::Vec3f {
+                        x: 1.,
+                        y: 0.5,
+                        z: 0.5,
+                    }, // reddish light
+                    0.8,
+                ));
+
                 println!["Opened file successfuly"];
                 self.scene = scene;
 

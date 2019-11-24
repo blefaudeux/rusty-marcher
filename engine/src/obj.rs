@@ -120,6 +120,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
                         y: t_f / n_triangles as f64,
                         z: 1.,
                     };
+                    println!["Object diffuse color {}", r.diffuse_color];
                     r
                 })
                 .collect();
@@ -155,12 +156,6 @@ pub fn autoscale(objects: &mut Vec<Obj>, desired_scale: f64) {
             for v in &mut o.triangles {
                 v.offset(-bb.middle());
             }
-
-            // let s = desired_scale / bb.scale();
-            // for v in &mut o.triangles {
-            //     v.scale(s);
-            //     // v.offset(bb.middle());
-            // }
         }
     }
 
@@ -183,7 +178,7 @@ impl Shape for Obj {
         let mut dist_closest = 0.;
 
         // Go through all triangles, return the hit closest to ray origin
-        for (t_i, t) in self.triangles.iter().enumerate() {
+        for (i, t) in self.triangles.iter().enumerate() {
             let res = t.intersect(orig, dir);
 
             if let Some(intersection) = res {
@@ -193,7 +188,7 @@ impl Shape for Obj {
                     intersection_final = Intersection {
                         point: intersection.point,
                         normal: intersection.normal,
-                        reflectance: self.reflectances[t_i],
+                        reflectance: self.reflectances[i],
                     };
 
                     hit_triangle = true;
