@@ -5,6 +5,7 @@ extern crate tobj;
 
 use geometry::Vec3f;
 // use polygon::*;
+use self::tobj::LoadOptions;
 use shapes::*;
 use std::path::Path;
 use triangle::*;
@@ -41,7 +42,14 @@ impl Obj {
 
 #[allow(dead_code)]
 pub fn load(path: String) -> Option<Vec<Obj>> {
-    let loaded = tobj::load_obj(&Path::new(&path));
+    let option: LoadOptions = LoadOptions {
+        single_index: true,
+        triangulate: true,
+        ignore_points: true,
+        ignore_lines: true,
+    };
+
+    let loaded = tobj::load_obj(&Path::new(&path), &option);
     if loaded.is_err() {
         println!["Could not load obj from {}", path];
         return None;
@@ -50,7 +58,11 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
     let (models, materials) = loaded.unwrap();
 
     println!["Loaded obj from {}", path];
-    println!["Models {}, materials {}", models.len(), materials.len()];
+    println![
+        "Models {}, materials {}",
+        models.len(),
+        materials.as_ref().expect("WOOPS").len()
+    ];
 
     // Construct independent object from the models and materials
     let objects: Vec<Obj> = models
@@ -58,7 +70,7 @@ pub fn load(path: String) -> Option<Vec<Obj>> {
         .map(|model| {
             // TODO: Handle material/reflectance properly
             let material = if let Some(id) = model.mesh.material_id {
-                Some(materials[id].clone())
+                Some(materials.as_ref().expect("WOOPS")[id].clone())
             } else {
                 None
             };

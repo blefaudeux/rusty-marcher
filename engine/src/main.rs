@@ -100,8 +100,10 @@ impl Update for Win {
                 open_file_dialog.set_filter(&filter);
 
                 let button_pressed = open_file_dialog.run();
-                let path = open_file_dialog.get_filename();
-                open_file_dialog.destroy();
+                let path = open_file_dialog.filename();
+                unsafe {
+                    open_file_dialog.destroy();
+                }
 
                 match path {
                     Some(filepath) => {
@@ -191,7 +193,7 @@ impl Widget for Win {
 
         // -- quick lambda to automate button declaration and binding
         let add_button = |container: &gtk::Box, label: &str, event: Msg| {
-            let toggle = Button::new_with_label(label);
+            let toggle = Button::with_label(label);
             container.add(&toggle);
             connect!(relm, toggle, connect_clicked(_), event);
         };
@@ -223,9 +225,9 @@ impl Widget for Win {
             window,
             connect_scroll_event(_, evt),
             return (
-                if evt.get_direction() == gdk::ScrollDirection::Up {
+                if evt.direction() == gdk::ScrollDirection::Up {
                     Msg::ToggleMoveBack
-                } else if evt.get_direction() == gdk::ScrollDirection::Down {
+                } else if evt.direction() == gdk::ScrollDirection::Down {
                     Msg::ToggleMoveCloser
                 } else {
                     Msg::Sink
@@ -235,7 +237,7 @@ impl Widget for Win {
         );
 
         // Create the raytrace framebuffer
-        let fb = framebuffer::create_frame_buffer(1280, 800);
+        let fb = framebuffer::create_frame_buffer(1600, 1280);
 
         connect!(
             relm,
@@ -332,7 +334,7 @@ impl Win {
 
             // Copy back the result in a gdk::pixbuff
             let image = &self.image;
-            let pixbuf = Pixbuf::new_from_mut_slice(
+            let pixbuf = Pixbuf::from_mut_slice(
                 self.fb.to_vec(),
                 gdk_pixbuf::Colorspace::Rgb,
                 false,
